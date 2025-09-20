@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ministry Dashboard - FRA Patta Management</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/ministry.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h3>Ministry Portal</h3>
+                <p>FRA Management System</p>
+            </div>
+            <div class="sidebar-menu">
+                <a href="#" class="menu-item active" data-section="home">HOME</a>
+                <a href="#" class="menu-item" data-section="upload-patta">Upload Patta</a>
+                <a href="#" class="menu-item" data-section="maps">Maps</a>
+                <a href="#" class="menu-item" data-section="policy-management">Policy Management</a>
+                <a href="#" class="menu-item" data-section="ngo-assignment">NGO Assignment</a>
+                <a href="#" class="menu-item" data-section="settings">Settings</a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header class="content-header">
+                <h1 id="page-title">Dashboard Overview</h1>
+                <div class="user-info">
+                    <span id="user-email"></span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </header>
+
+            <!-- HOME Section -->
+            <div id="home-section" class="content-section">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">Platform Overview</h2>
+                <p style="font-size: 1.1rem; line-height: 1.8; margin-bottom: 2rem; color: var(--text-light);">
+                    The Forest Rights Act Digital Platform serves as a comprehensive solution for managing tribal land rights and facilitating effective coordination between government authorities and non-governmental organizations. This system transforms traditional paper-based processes into efficient digital workflows, ensuring transparent and accountable implementation of the Forest Rights Act across all operational regions.
+                </p>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3 id="total-pattas">0</h3>
+                        <p>Total Pattas Processed</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="verified-pattas">0</h3>
+                        <p>Verified Records</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="active-ngos">0</h3>
+                        <p>Active NGO Partners</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 id="pending-assignments">0</h3>
+                        <p>Pending Assignments</p>
+                    </div>
+                </div>
+
+                <div style="background: var(--light-gray); padding: 2rem; border-radius: 12px; margin-top: 2rem;">
+                    <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Benefits for Tribal Communities</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        <div>
+                            <h4 style="color: var(--dark-green); margin-bottom: 0.5rem;">Transparent Process</h4>
+                            <p>Digital records ensure complete transparency in land rights allocation and status tracking.</p>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--dark-green); margin-bottom: 0.5rem;">Faster Processing</h4>
+                            <p>Automated data extraction and verification significantly reduce processing time.</p>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--dark-green); margin-bottom: 0.5rem;">Better Coordination</h4>
+                            <p>Improved communication between Ministry and field NGOs ensures effective implementation.</p>
+                        </div>
+                        <div>
+                            <h4 style="color: var(--dark-green); margin-bottom: 0.5rem;">Data Security</h4>
+                            <p>Secure digital storage protects important land rights documents from loss or damage.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upload Patta Section -->
+            <div id="upload-patta-section" class="content-section" style="display: none;">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">Upload FRA Patta Documents</h2>
+                
+                <div class="upload-area" onclick="document.getElementById('patta-file').click()">
+                    <div class="upload-icon">📄</div>
+                    <h3>Click to Upload or Drag & Drop</h3>
+                    <p>Supported formats: PDF, DOC, DOCX (Max size: 10MB)</p>
+                    <input type="file" id="patta-file" class="file-input" accept=".pdf,.doc,.docx" multiple>
+                </div>
+
+                <div id="upload-progress" style="display: none; margin-top: 1rem;">
+                    <div style="background: var(--light-gray); border-radius: 8px; overflow: hidden;">
+                        <div id="progress-bar" style="height: 20px; background: var(--primary-green); width: 0%; transition: width 0.3s ease;"></div>
+                    </div>
+                    <p id="upload-status" style="margin-top: 0.5rem; text-align: center;"></p>
+                </div>
+
+                <div id="extracted-data" style="display: none; margin-top: 2rem;">
+                    <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Extracted Information</h3>
+                    <div id="extraction-results"></div>
+                </div>
+            </div>
+
+            <!-- Maps Section -->
+            <div id="maps-section" class="content-section" style="display: none;">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">Interactive Land Parcel Maps</h2>
+                <div id="map-container" class="map-container">
+                    <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: var(--light-gray); color: var(--text-light);">
+                        <p>Map will be loaded here using GIS integration</p>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1.5rem;">
+                    <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Map Legend</h3>
+                    <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 20px; height: 20px; background: var(--primary-green); border-radius: 50%;"></div>
+                            <span>Verified Pattas</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 20px; height: 20px; background: var(--accent-green); border-radius: 50%;"></div>
+                            <span>Pending Verification</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 20px; height: 20px; background: #ffc107; border-radius: 50%;"></div>
+                            <span>Under Review</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Policy Management Section -->
+            <div id="policy-management-section" class="content-section" style="display: none;">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">Policy Document Management</h2>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <div>
+                        <input type="text" placeholder="Search policies..." style="padding: 0.5rem 1rem; border: 2px solid var(--border-color); border-radius: 6px; width: 300px;">
+                    </div>
+                    <button class="btn btn-primary" onclick="document.getElementById('policy-file').click()">
+                        Add New Policy
+                    </button>
+                    <input type="file" id="policy-file" class="file-input" accept=".pdf,.doc,.docx">
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Policy Name</th>
+                            <th>Category</th>
+                            <th>Upload Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="policy-table-body">
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: var(--text-light);">No policies uploaded yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- NGO Assignment Section -->
+            <div id="ngo-assignment-section" class="content-section" style="display: none;">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">NGO Assignment Management</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h3 style="color: var(--dark-green); margin-bottom: 1rem;">Registered NGOs</h3>
+                        <div id="ngo-list" style="max-height: 400px; overflow-y: auto;">
+                            <div style="text-align: center; color: var(--text-light); padding: 2rem;">
+                                Loading NGO data...
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="color: var(--dark-green); margin-bottom: 1rem;">Create Assignment</h3>
+                        <form id="assignment-form">
+                            <div class="form-group">
+                                <label>Select NGO</label>
+                                <select id="ngo-select" class="form-control" required>
+                                    <option value="">Choose NGO</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Assignment Area</label>
+                                <input type="text" id="assignment-area" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Instructions</label>
+                                <textarea id="assignment-instructions" class="form-control" rows="4" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Deadline</label>
+                                <input type="date" id="assignment-deadline" class="form-control" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Create Assignment</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div id="settings-section" class="content-section" style="display: none;">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">System Settings</h2>
+                
+                <form id="settings-form">
+                    <div class="form-group">
+                        <label>Ministry Name</label>
+                        <input type="text" id="ministry-name" class="form-control" value="Ministry of Tribal Affairs">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="ministry-description" class="form-control" rows="3">Implementing Forest Rights Act for tribal communities across the nation</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Country</label>
+                        <input type="text" id="ministry-country" class="form-control" value="India">
+                    </div>
+                    <div class="form-group">
+                        <label>Contact Email</label>
+                        <input type="email" id="ministry-email" class="form-control" value="contact@tribal.gov.in">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/ministry.js"></script>
+</body>
+</html>

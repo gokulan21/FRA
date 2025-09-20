@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Patta - Ministry Dashboard</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/ministry.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h3>Ministry Portal</h3>
+                <p>FRA Management System</p>
+            </div>
+            <div class="sidebar-menu">
+                <a href="dashboard.html" class="menu-item">HOME</a>
+                <a href="upload-patta.html" class="menu-item active">Upload Patta</a>
+                <a href="maps.html" class="menu-item">Maps</a>
+                <a href="policy-management.html" class="menu-item">Policy Management</a>
+                <a href="ngo-assignment.html" class="menu-item">NGO Assignment</a>
+                <a href="settings.html" class="menu-item">Settings</a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header class="content-header">
+                <h1>Upload FRA Patta Documents</h1>
+                <div class="user-info">
+                    <span id="user-email"></span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </header>
+
+            <div class="content-section">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                    <div>
+                        <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Single Document Upload</h3>
+                        <div class="upload-area" id="single-upload-area">
+                            <div class="upload-icon">📄</div>
+                            <h4>Click to Upload or Drag & Drop</h4>
+                            <p>Single PDF, DOC, or DOCX file (Max size: 10MB)</p>
+                            <input type="file" id="single-patta-file" class="file-input" accept=".pdf,.doc,.docx">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Bulk Document Upload</h3>
+                        <div class="upload-area" id="bulk-upload-area">
+                            <div class="upload-icon">📁</div>
+                            <h4>Click to Upload Multiple Files</h4>
+                            <p>Multiple PDF, DOC, or DOCX files (Max 10 files)</p>
+                            <input type="file" id="bulk-patta-files" class="file-input" accept=".pdf,.doc,.docx" multiple>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="upload-progress" style="display: none;">
+                    <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Upload Progress</h3>
+                    <div id="progress-list"></div>
+                </div>
+
+                <div id="extraction-results" style="display: none;">
+                    <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Data Extraction Results</h3>
+                    <div id="results-container"></div>
+                </div>
+            </div>
+
+            <div class="content-section">
+                <h3 style="color: var(--primary-green); margin-bottom: 1.5rem;">Recent Uploads</h3>
+                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 1rem;">
+                    <div>
+                        <select id="status-filter" class="form-control" style="width: 150px;">
+                            <option value="">All Status</option>
+                            <option value="true">Verified</option>
+                            <option value="false">Pending</option>
+                        </select>
+                    </div>
+                    <div>
+                        <input type="text" id="search-pattas" placeholder="Search by name, district..." class="form-control" style="width: 250px;">
+                    </div>
+                </div>
+                
+                <div id="recent-uploads">
+                    <div style="text-align: center; padding: 2rem; color: var(--text-light);">
+                        Loading recent uploads...
+                    </div>
+                </div>
+                
+                <div id="uploads-pagination" style="text-align: center; margin-top: 1rem;"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!token || user.role !== 'ministry') {
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            document.getElementById('user-email').textContent = user.email;
+            
+            setupUploadHandlers();
+            loadRecentUploads();
+            setupFilters();
+        });
+
+        function setupUploadHandlers() {
+            // Single file upload
+            const singleUploadArea = document.getElementById('single-upload-area');
+            const singleFileInput = document.getElementById('single-patta-file');
+            
+            singleUploadArea.addEventListener('click', () => singleFileInput.click());
+            setupDragDrop(singleUploadArea, singleFileInput);
+            
+            singleFileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload([e.target.files[0]], 'single');
+                }
+            });
+
+            // Bulk file upload
+            const bulkUploadArea = document.getElementById('bulk-upload-area');
+            const bulkFileInput = document.getElementById('bulk-patta-files');
+            
+            bulkUploadArea.addEventListener('click', () => bulkFileInput.click());
+            setupDragDrop(bulkUploadArea, bulkFileInput);
+            
+            bulkFileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(Array.from(e.target.files), 'bulk');
+                }
+            });
+        }
+
+        function setupDragDrop(area, input) {
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+            
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('dragover');
+            });
+            
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                
+                const files = Array.from(e.dataTransfer.files);
+                handleFileUpload(files, area.id.includes('bulk') ? 'bulk' : 'single');
+            });
+        }
+
+        async function handleFileUpload(files, type) {
+            const progressContainer = document.getElementById('upload-progress');
+            const progressList = document.getElementById('progress-list');
+            const resultsContainer = document.getElementById('extraction-results');
+            const resultsDiv = document.getElementById('results-container');
+            
+            progressContainer.style.display = 'block';
+            resultsContainer.style.display = 'none';
+            progressList.innerHTML = '';
+            
+            const results = [];
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const progressItem = createProgressItem(file.name);
+                progressList.appendChild(progressItem);
+                
+                try {
+                    const result = await uploadSingleFile(file, progressItem);
+                    results.push(result);
+                    updateProgressItem(progressItem, 'success', 'Upload completed successfully');
+                } catch (error) {
+                    updateProgressItem(progressItem, 'error', error.message);
+                }
+            }
+            
+            // Display extraction results
+            if (results.length > 0) {
+                displayExtractionResults(results);
+                resultsContainer.style.display = 'block';
+            }
+            
+            // Refresh recent uploads
+            loadRecentUploads();
+        }
+
+        function createProgressItem(filename) {
+            const item = document.createElement('div');
+            item.className = 'progress-item';
+            item.innerHTML = `
+                <div class="progress-header">
+                    <span class="filename">${filename}</span>
+                    <span class="status">Uploading...</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+            `;
+            return item;
+        }
+
+        function updateProgressItem(item, status, message) {
+            const statusSpan = item.querySelector('.status');
+            const progressFill = item.querySelector('.progress-fill');
+            
+            statusSpan.textContent = message;
+            
+            if (status === 'success') {
+                progressFill.style.width = '100%';
+                progressFill.style.backgroundColor = 'var(--primary-green)';
+                item.classList.add('success');
+            } else if (status === 'error') {
+                progressFill.style.backgroundColor = '#dc3545';
+                item.classList.add('error');
+            }
+        }
+
+        async function uploadSingleFile(file, progressItem) {
+            const formData = new FormData();
+            formData.append('pattaFile', file);
+            
+            const progressFill = progressItem.querySelector('.progress-fill');
+            
+            const response = await fetch('/api/patta/upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            });
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 10;
+                progressFill.style.width = `${Math.min(progress, 90)}%`;
+                if (progress >= 90) clearInterval(progressInterval);
+            }, 100);
+            
+            if (!response.ok) {
+                clearInterval(progressInterval);
+                const error = await response.json();
+                throw new Error(error.message || 'Upload failed');
+            }
+            
+            clearInterval(progressInterval);
+            progressFill.style.width = '100%';
+            
+            return await response.json();
+        }
+
+        function displayExtractionResults(results) {
+            const container = document.getElementById('results-container');
+            
+            container.innerHTML = results.map(result => `
+                <div class="extraction-result">
+                    <h4>${result.fileName}</h4>
+                    <div class="extracted-fields">
+                        <div class="field-grid">
+                            <div class="field">
+                                <label>Claimant Name:</label>
+                                <span>${result.extractedData.claimantName || 'Not extracted'}</span>
+                            </div>
+                            <div class="field">
+                                <label>District:</label>
+                                <span>${result.extractedData.district || 'Not extracted'}</span>
+                            </div>
+                            <div class="field">
+                                <label>Village:</label>
+                                <span>${result.extractedData.village || 'Not extracted'}</span>
+                            </div>
+                            <div class="field">
+                                <label>State:</label>
+                                <span>${result.extractedData.state || 'Not extracted'}</span>
+                            </div>
+                            <div class="field">
+                                <label>Land Area:</label>
+                                <span>${result.extractedData.landArea || 'Not extracted'}</span>
+                            </div>
+                            <div class="field">
+                                <label>Approval Date:</label>
+                                <span>${result.extractedData.approvalDate ? fraSystem.formatDate(result.extractedData.approvalDate) : 'Not extracted'}</span>
+                            </div>
+                        </div>
+                        <div class="result-actions">
+                            <button class="btn btn-primary btn-small" onclick="editPatta('${result.pattaId}')">Edit Details</button>
+                            <button class="btn btn-secondary btn-small" onclick="verifyPatta('${result.pattaId}')">Verify</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadRecentUploads(page = 1, filter = '', search = '') {
+            try {
+                const params = new URLSearchParams({
+                    page: page.toString(),
+                    limit: '10',
+                    sort: 'createdAt',
+                    order: 'desc'
+                });
+                
+                if (filter) params.append('verified', filter);
+                if (search) params.append('search', search);
+                
+                const response = await fraSystem.apiRequest(`/patta?${params}`);
+                displayRecentUploads(response.pattas);
+                displayPagination(response.pagination);
+                
+            } catch (error) {
+                fraSystem.showNotification('Error loading recent uploads: ' + error.message, 'error');
+            }
+        }
+
+        function displayRecentUploads(pattas) {
+            const container = document.getElementById('recent-uploads');
+            
+            if (pattas.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-light);">
+                        <h4>No uploads found</h4>
+                        <p>No patta documents match the current filter criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Claimant Name</th>
+                            <th>District</th>
+                            <th>Village</th>
+                            <th>Upload Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${pattas.map(patta => `
+                            <tr>
+                                <td>${patta.claimantName}</td>
+                                <td>${patta.district}</td>
+                                <td>${patta.village}</td>
+                                <td>${fraSystem.formatDate(patta.createdAt)}</td>
+                                <td>
+                                    <span class="status-badge ${patta.isVerified ? 'verified' : 'pending'}">
+                                        ${patta.isVerified ? 'Verified' : 'Pending'}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button class="btn btn-secondary btn-small" onclick="viewPatta('${patta._id}')">View</button>
+                                    ${!patta.isVerified ? `<button class="btn btn-primary btn-small" onclick="verifyPatta('${patta._id}')">Verify</button>` : ''}
+                                    <button class="btn btn-danger btn-small" onclick="deletePatta('${patta._id}')">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function displayPagination(pagination) {
+            const container = document.getElementById('uploads-pagination');
+            if (!pagination || pagination.pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '<div class="pagination">';
+            
+            if (pagination.current > 1) {
+                html += `<button class="btn btn-secondary btn-small" onclick="loadRecentUploads(${pagination.current - 1})">Previous</button>`;
+            }
+            
+            for (let i = Math.max(1, pagination.current - 2); i <= Math.min(pagination.pages, pagination.current + 2); i++) {
+                const isActive = i === pagination.current;
+                html += `<button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'} btn-small" 
+                         onclick="loadRecentUploads(${i})" ${isActive ? 'disabled' : ''}>${i}</button>`;
+            }
+            
+            if (pagination.current < pagination.pages) {
+                html += `<button class="btn btn-secondary btn-small" onclick="loadRecentUploads(${pagination.current + 1})">Next</button>`;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function setupFilters() {
+            const statusFilter = document.getElementById('status-filter');
+            const searchInput = document.getElementById('search-pattas');
+            
+            statusFilter.addEventListener('change', (e) => {
+                loadRecentUploads(1, e.target.value);
+            });
+            
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadRecentUploads(1, statusFilter.value, e.target.value);
+                }, 500);
+            });
+        }
+
+        // Action functions
+        window.editPatta = (pattaId) => {
+            window.location.href = `edit-patta.html?id=${pattaId}`;
+        };
+
+        window.verifyPatta = async (pattaId) => {
+            if (confirm('Are you sure you want to verify this patta?')) {
+                try {
+                    await fraSystem.apiRequest(`/patta/${pattaId}/verify`, { method: 'PUT' });
+                    fraSystem.showNotification('Patta verified successfully!', 'success');
+                    loadRecentUploads();
+                } catch (error) {
+                    fraSystem.showNotification('Error verifying patta: ' + error.message, 'error');
+                }
+            }
+        };
+
+        window.viewPatta = (pattaId) => {
+            window.location.href = `view-patta.html?id=${pattaId}`;
+        };
+
+        window.deletePatta = async (pattaId) => {
+            if (confirm('Are you sure you want to delete this patta? This action cannot be undone.')) {
+                try {
+                    await fraSystem.apiRequest(`/patta/${pattaId}`, { method: 'DELETE' });
+                    fraSystem.showNotification('Patta deleted successfully!', 'success');
+                    loadRecentUploads();
+                } catch (error) {
+                    fraSystem.showNotification('Error deleting patta: ' + error.message, 'error');
+                }
+            }
+        };
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '../login.html';
+        }
+    </script>
+
+    <style>
+        .progress-item {
+            background: var(--light-gray);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .filename {
+            font-weight: 600;
+            color: var(--primary-green);
+        }
+        
+        .status {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-green);
+            transition: width 0.3s ease;
+        }
+        
+        .progress-item.success .status {
+            color: var(--primary-green);
+        }
+        
+        .progress-item.error .status {
+            color: #dc3545;
+        }
+        
+        .extraction-result {
+            background: var(--light-gray);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid var(--primary-green);
+        }
+        
+        .extraction-result h4 {
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+        }
+        
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .field label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+        
+        .field span {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        
+        .result-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.verified {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            align-items: center;
+        }
+    </style>
+</body>
+</html>

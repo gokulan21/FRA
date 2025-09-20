@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Assignments - NGO Dashboard</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/ngo.css">
+</head>
+<body class="ngo-dashboard">
+    <header class="ngo-header">
+        <div class="container">
+            <h1>My Assignments</h1>
+            <div class="user-info">
+                <span id="ngo-name"></span>
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <nav class="ngo-nav">
+            <ul>
+                <li><a href="dashboard.html" class="nav-link">Overview</a></li>
+                <li><a href="assignments.html" class="nav-link active">My Assignments</a></li>
+                <li><a href="reports.html" class="nav-link">Submit Reports</a></li>
+                <li><a href="#" class="nav-link" onclick="loadPolicies()">Policies</a></li>
+            </ul>
+        </nav>
+
+        <main class="ngo-main-content">
+            <!-- Assignment Statistics -->
+            <div class="ngo-content-section">
+                <h2>Assignment Overview</h2>
+                
+                <div class="ngo-stats-grid">
+                    <div class="ngo-stat-card">
+                        <h3 id="total-assignments">0</h3>
+                        <p>Total Assignments</p>
+                    </div>
+                    <div class="ngo-stat-card">
+                        <h3 id="active-assignments">0</h3>
+                        <p>Active</p>
+                    </div>
+                    <div class="ngo-stat-card">
+                        <h3 id="completed-assignments">0</h3>
+                        <p>Completed</p>
+                    </div>
+                    <div class="ngo-stat-card">
+                        <h3 id="overdue-assignments">0</h3>
+                        <p>Overdue</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignment Filters -->
+            <div class="ngo-content-section">
+                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                    <h2 style="margin: 0;">Assignment List</h2>
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <select id="status-filter" class="form-control" style="width: 150px;">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="in-progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
+                        <select id="priority-filter" class="form-control" style="width: 150px;">
+                            <option value="">All Priority</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                        <input type="text" id="assignment-search" placeholder="Search assignments..." class="form-control" style="width: 250px;">
+                    </div>
+                </div>
+
+                <div id="assignments-list">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-light);">
+                        Loading assignments...
+                    </div>
+                </div>
+
+                <div id="assignments-pagination" style="text-align: center; margin-top: 2rem;"></div>
+            </div>
+
+            <!-- Assignment Details Modal -->
+            <div id="assignment-modal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modal-title">Assignment Details</h3>
+                        <button class="modal-close" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="modal-body" id="modal-body">
+                        <!-- Assignment details will be loaded here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
+                        <button id="modal-action-btn" class="btn btn-primary" style="display: none;">Start Assignment</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!token || user.role !== 'ngo') {
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            document.getElementById('ngo-name').textContent = user.profile?.name || user.email;
+            
+            initializeAssignmentsPage();
+        });
+
+        function initializeAssignmentsPage() {
+            setupFilters();
+            loadAssignments();
+            loadAssignmentStats();
+        }
+
+        async function loadAssignmentStats() {
+            try {
+                const response = await fraSystem.apiRequest('/assignment/my-assignments');
+                
+                document.getElementById('total-assignments').textContent = response.stats.total;
+                document.getElementById('active-assignments').textContent = response.stats.active;
+                document.getElementById('completed-assignments').textContent = response.stats.completed;
+                document.getElementById('overdue-assignments').textContent = response.stats.overdue;
+                
+            } catch (error) {
+                fraSystem.showNotification('Error loading assignment statistics: ' + error.message, 'error');
+            }
+        }
+
+        async function loadAssignments(page = 1, status = '', priority = '', search = '') {
+            try {
+                const params = new URLSearchParams({
+                    page: page.toString(),
+                    limit: '10'
+                });
+                
+                if (status) params.append('status', status);
+                if (priority) params.append('priority', priority);
+                if (search) params.append('search', search);
+                
+                const response = await fraSystem.apiRequest(`/assignment/my-assignments?${params}`);
+                displayAssignments(response.assignments);
+                displayPagination(response.pagination);
+                
+            } catch (error) {
+                fraSystem.showNotification('Error loading assignments: ' + error.message, 'error');
+            }
+        }
+
+        function displayAssignments(assignments) {
+            const container = document.getElementById('assignments-list');
+            
+            if (assignments.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: var(--text-light);">
+                        <h3>No assignments found</h3>
+                        <p>You don't have any assignments matching the current filter criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = assignments.map(assignment => {
+                const isOverdue = new Date(assignment.deadline) < new Date() && assignment.status === 'active';
+                return `
+                    <div class="assignment-card ${assignment.status} ${isOverdue ? 'overdue' : ''}">
+                        <div class="assignment-header">
+                            <h3 class="assignment-title">${assignment.title || assignment.area.district}</h3>
+                            <div style="display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-end;">
+                                <span class="assignment-status status-${assignment.status}">${assignment.status.replace('-', ' ').toUpperCase()}</span>
+                                <span class="priority-badge priority-${assignment.priority}">${assignment.priority.toUpperCase()}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="assignment-details">
+                            <div class="assignment-detail">
+                                <label>Area/District</label>
+                                <span>${assignment.area.district}</span>
+                            </div>
+                            <div class="assignment-detail">
+                                <label>Deadline</label>
+                                <span style="color: ${isOverdue ? '#dc3545' : 'inherit'};">
+                                    ${fraSystem.formatDate(assignment.deadline)}
+                                    ${isOverdue ? ' (OVERDUE)' : ''}
+                                </span>
+                            </div>
+                            <div class="assignment-detail">
+                                <label>Progress</label>
+                                <span>${assignment.progress || 0}%</span>
+                            </div>
+                            <div class="assignment-detail">
+                                <label>Assigned Date</label>
+                                <span>${fraSystem.formatDate(assignment.createdAt)}</span>
+                            </div>
+                        </div>
+                        
+                        ${assignment.area.villages && assignment.area.villages.length > 0 ? `
+                            <div style="margin-bottom: 1rem;">
+                                <strong>Target Villages:</strong>
+                                <p style="margin: 0.5rem 0 0 0; color: var(--text-light);">${assignment.area.villages.join(', ')}</p>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="assignment-instructions">
+                            <h4>Instructions:</h4>
+                            <p>${assignment.instructions}</p>
+                        </div>
+                        
+                        ${assignment.objectives && assignment.objectives.length > 0 ? `
+                            <div style="background: var(--white); padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                                <h4 style="color: var(--primary-green); margin-bottom: 0.5rem; font-size: 0.9rem;">Key Objectives:</h4>
+                                <ul style="margin: 0; padding-left: 1.5rem;">
+                                    ${assignment.objectives.map(obj => `<li>${obj}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="assignment-actions">
+                            <button class="btn btn-secondary btn-small" onclick="viewAssignmentDetails('${assignment._id}')">
+                                View Full Details
+                            </button>
+                            ${assignment.status === 'active' ? `
+                                <button class="btn btn-primary btn-small" onclick="startAssignment('${assignment._id}')">
+                                    Start Work
+                                </button>
+                            ` : ''}
+                            ${assignment.status === 'in-progress' ? `
+                                <button class="btn btn-warning btn-small" onclick="updateProgress('${assignment._id}')">
+                                    Update Progress
+                                </button>
+                            ` : ''}
+                            ${assignment.status === 'completed' && assignment.report ? `
+                                <button class="btn btn-success btn-small" onclick="viewReport('${assignment._id}')">
+                                    View Report
+                                </button>
+                            ` : ''}
+                            ${(assignment.status === 'active' || assignment.status === 'in-progress') ? `
+                                <button class="btn btn-primary btn-small" onclick="submitReport('${assignment._id}')">
+                                    Submit Report
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function setupFilters() {
+            const statusFilter = document.getElementById('status-filter');
+            const priorityFilter = document.getElementById('priority-filter');
+            const searchInput = document.getElementById('assignment-search');
+            
+            statusFilter.addEventListener('change', (e) => {
+                loadAssignments(1, e.target.value, priorityFilter.value, searchInput.value);
+            });
+            
+            priorityFilter.addEventListener('change', (e) => {
+                loadAssignments(1, statusFilter.value, e.target.value, searchInput.value);
+            });
+            
+            let searchTimeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    loadAssignments(1, statusFilter.value, priorityFilter.value, e.target.value);
+                }, 500);
+            });
+        }
+
+        function displayPagination(pagination) {
+            const container = document.getElementById('assignments-pagination');
+            if (!pagination || pagination.pages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let html = '<div class="pagination">';
+            
+            if (pagination.current > 1) {
+                html += `<button class="btn btn-secondary btn-small" onclick="loadAssignments(${pagination.current - 1})">Previous</button>`;
+            }
+            
+            for (let i = Math.max(1, pagination.current - 2); i <= Math.min(pagination.pages, pagination.current + 2); i++) {
+                const isActive = i === pagination.current;
+                html += `<button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'} btn-small" 
+                         onclick="loadAssignments(${i})" ${isActive ? 'disabled' : ''}>${i}</button>`;
+            }
+            
+            if (pagination.current < pagination.pages) {
+                html += `<button class="btn btn-secondary btn-small" onclick="loadAssignments(${pagination.current + 1})">Next</button>`;
+            }
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Action functions
+        window.viewAssignmentDetails = async (assignmentId) => {
+            try {
+                const assignment = await fraSystem.apiRequest(`/assignment/${assignmentId}`);
+                showAssignmentModal(assignment);
+            } catch (error) {
+                fraSystem.showNotification('Error loading assignment details: ' + error.message, 'error');
+            }
+        };
+
+        function showAssignmentModal(assignment) {
+            const modal = document.getElementById('assignment-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const actionBtn = document.getElementById('modal-action-btn');
+            
+            modalTitle.textContent = assignment.title || assignment.area.district;
+            
+            modalBody.innerHTML = `
+                <div class="assignment-details-full">
+                    <div class="detail-section">
+                        <h4>Basic Information</h4>
+                        <div class="detail-grid">
+                            <div><strong>Area/District:</strong> ${assignment.area.district}</div>
+                            <div><strong>Priority:</strong> ${assignment.priority.toUpperCase()}</div>
+                            <div><strong>Status:</strong> ${assignment.status.replace('-', ' ').toUpperCase()}</div>
+                            <div><strong>Deadline:</strong> ${fraSystem.formatDate(assignment.deadline)}</div>
+                            <div><strong>Progress:</strong> ${assignment.progress || 0}%</div>
+                            <div><strong>Assigned By:</strong> ${assignment.assignedBy?.email}</div>
+                        </div>
+                    </div>
+                    
+                    ${assignment.area.villages && assignment.area.villages.length > 0 ? `
+                        <div class="detail-section">
+                            <h4>Target Villages</h4>
+                            <p>${assignment.area.villages.join(', ')}</p>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="detail-section">
+                        <h4>Description</h4>
+                        <p>${assignment.description}</p>
+                    </div>
+                    
+                    <div class="detail-section">
+                        <h4>Instructions</h4>
+                        <p>${assignment.instructions}</p>
+                    </div>
+                    
+                    ${assignment.objectives && assignment.objectives.length > 0 ? `
+                        <div class="detail-section">
+                            <h4>Objectives</h4>
+                            <ul>
+                                ${assignment.objectives.map(obj => `<li>${obj}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    ${assignment.expectedDeliverables && assignment.expectedDeliverables.length > 0 ? `
+                        <div class="detail-section">
+                            <h4>Expected Deliverables</h4>
+                            <ul>
+                                ${assignment.expectedDeliverables.map(del => `<li>${del}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            
+            // Show appropriate action button
+            if (assignment.status === 'active') {
+                actionBtn.style.display = 'inline-block';
+                actionBtn.textContent = 'Start Assignment';
+                actionBtn.onclick = () => {
+                    closeModal();
+                    startAssignment(assignment._id);
+                };
+            } else {
+                actionBtn.style.display = 'none';
+            }
+            
+            modal.style.display = 'flex';
+        }
+
+        window.startAssignment = async (assignmentId) => {
+            if (confirm('Are you ready to start working on this assignment?')) {
+                try {
+                    await fraSystem.apiRequest(`/assignment/${assignmentId}/status`, {
+                        method: 'PUT',
+                        body: { status: 'in-progress' }
+                    });
+                    
+                    fraSystem.showNotification('Assignment started successfully!', 'success');
+                    loadAssignments();
+                    loadAssignmentStats();
+                    
+                } catch (error) {
+                    fraSystem.showNotification('Error starting assignment: ' + error.message, 'error');
+                }
+            }
+        };
+
+        window.updateProgress = async (assignmentId) => {
+            const progress = prompt('Enter progress percentage (0-100):');
+            if (progress !== null && !isNaN(progress) && progress >= 0 && progress <= 100) {
+                try {
+                    await fraSystem.apiRequest(`/assignment/${assignmentId}/status`, {
+                        method: 'PUT',
+                        body: { 
+                            progress: parseInt(progress),
+                            status: progress == 100 ? 'completed' : 'in-progress'
+                        }
+                    });
+                    
+                    fraSystem.showNotification('Progress updated successfully!', 'success');
+                    loadAssignments();
+                    
+                } catch (error) {
+                    fraSystem.showNotification('Error updating progress: ' + error.message, 'error');
+                }
+            }
+        };
+
+        window.submitReport = (assignmentId) => {
+            window.location.href = `reports.html?assignment=${assignmentId}`;
+        };
+
+        window.viewReport = async (assignmentId) => {
+            try {
+                const assignment = await fraSystem.apiRequest(`/assignment/${assignmentId}`);
+                
+                if (assignment.report) {
+                    alert(`Field Report Summary:\n\n${assignment.report.summary}\n\nSubmitted: ${fraSystem.formatDate(assignment.report.submittedAt)}`);
+                }
+                
+            } catch (error) {
+                fraSystem.showNotification('Error loading report: ' + error.message, 'error');
+            }
+        };
+
+        function closeModal() {
+            document.getElementById('assignment-modal').style.display = 'none';
+        }
+
+        function loadPolicies() {
+            window.location.href = 'dashboard.html#policies';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '../login.html';
+        }
+    </script>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: var(--white);
+            border-radius: 12px;
+            max-width: 800px;
+            max-height: 80vh;
+            width: 90%;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-header {
+            background: var(--primary-green);
+            color: var(--white);
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--white);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+        }
+        
+        .modal-body {
+            padding: 2rem;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .modal-footer {
+            background: var(--light-gray);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        
+        .detail-section {
+            margin-bottom: 2rem;
+        }
+        
+        .detail-section h4 {
+            color: var(--primary-green);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+        
+        .priority-badge {
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .priority-low { background: #d4edda; color: #155724; }
+        .priority-medium { background: #fff3cd; color: #856404; }
+        .priority-high { background: #f8d7da; color: #721c24; }
+        .priority-urgent { background: #f5c6cb; color: #721c24; }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            align-items: center;
+        }
+    </style>
+</body>
+</html>

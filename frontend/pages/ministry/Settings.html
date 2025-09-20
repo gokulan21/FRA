@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Ministry Dashboard</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/ministry.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h3>Ministry Portal</h3>
+                <p>FRA Management System</p>
+            </div>
+            <div class="sidebar-menu">
+                <a href="dashboard.html" class="menu-item">HOME</a>
+                <a href="upload-patta.html" class="menu-item">Upload Patta</a>
+                <a href="maps.html" class="menu-item">Maps</a>
+                <a href="policy-management.html" class="menu-item">Policy Management</a>
+                <a href="ngo-assignment.html" class="menu-item">NGO Assignment</a>
+                <a href="settings.html" class="menu-item active">Settings</a>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header class="content-header">
+                <h1>System Settings</h1>
+                <div class="user-info">
+                    <span id="user-email"></span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </header>
+
+            <!-- Profile Settings -->
+            <div class="content-section">
+                <h3 style="color: var(--primary-green); margin-bottom: 1.5rem;">Profile Settings</h3>
+                <form id="profile-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <div class="form-group">
+                                <label for="profile-name">Full Name</label>
+                                <input type="text" id="profile-name" name="name" class="form-control" placeholder="Enter your full name">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-designation">Designation</label>
+                                <input type="text" id="profile-designation" name="designation" class="form-control" placeholder="Your job title/designation">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-department">Department</label>
+                                <input type="text" id="profile-department" name="department" class="form-control" value="Ministry of Tribal Affairs" readonly>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label for="profile-phone">Contact Number</label>
+                                <input type="tel" id="profile-phone" name="phone" class="form-control" placeholder="Your contact number">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-office">Office Location</label>
+                                <input type="text" id="profile-office" name="office" class="form-control" placeholder="Office address">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-region">Region/State</label>
+                                <input type="text" id="profile-region" name="region" class="form-control" placeholder="Area of responsibility">
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </form>
+            </div>
+
+            <!-- Security Settings -->
+            <div class="content-section">
+                <h3 style="color: var(--primary-green); margin-bottom: 1.5rem;">Security Settings</h3>
+                <form id="password-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="current-password">Current Password</label>
+                            <input type="password" id="current-password" name="currentPassword" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" name="newPassword" class="form-control" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm-password">Confirm New Password</label>
+                            <input type="password" id="confirm-password" name="confirmPassword" class="form-control" required>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 1rem;">
+                        <small style="color: var(--text-light);">
+                            Password must be at least 6 characters long and contain a mix of letters and numbers.
+                        </small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Change Password</button>
+                </form>
+            </div>
+
+            <!-- System Configuration -->
+            <div class="content-section">
+                <h3 style="color: var(--primary-green); margin-bottom: 1.5rem;">System Configuration</h3>
+                <form id="system-config-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <div class="form-group">
+                                <label for="system-name">System Name</label>
+                                <input type="text" id="system-name" name="systemName" class="form-control" value="FRA Patta Management System" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="system-version">Version</label>
+                                <input type="text" id="system-version" name="version" class="form-control" value="1.0.0" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="max-file-size">Maximum File Size (MB)</label>
+                                <input type="number" id="max-file-size" name="maxFileSize" class="form-control" value="10" min="1" max="50">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label for="session-timeout">Session Timeout (minutes)</label>
+                                <input type="number" id="session-timeout" name="sessionTimeout" class="form-control" value="60" min="15" max="480">
+                            </div>
+                            <div class="form-group">
+                                <label for="auto-backup">Auto Backup</label>
+                                <select id="auto-backup" name="autoBackup" class="form-control">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="disabled">Disabled</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="email-notifications">Email Notifications</label>
+                                <select id="email-notifications" name="emailNotifications" class="form-control">
+                                    <option value="all" selected>All Events</option>
+                                    <option value="important">Important Only</option>
+                                    <option value="disabled">Disabled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Configuration</button>
+                </form>
+            </div>
+
+            <!-- Data Management -->
+            <div class="content-section">
+                <h3 style="color: var(--primary-green); margin-bottom: 1.5rem;">Data Management</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                    <div style="background: var(--light-gray); padding: 2rem; border-radius: 12px; text-align: center;">
+                        <h4 style="color: var(--primary-green); margin-bottom: 1rem;">Database Backup</h4>
+                        <p style="color: var(--text-light); margin-bottom: 1.5rem;">Create a backup of all system data including pattas, NGO records, and assignments.</p>
+                        <button class="btn btn-primary" onclick="createBackup()">Create Backup</button>
+                        <div id="backup-status" style="margin-top: 1rem; display: none;"></div>
+                    </div>
+                    
+                    <div style="background: var(--light-gray); padding: 2rem; border-radius: 12px; text-align: center;">
+                        <h4 style="color: var(--primary-green); margin-bottom: 1rem;">Data Export</h4>
+                        <p style="color: var(--text-light); margin-bottom: 1.5rem;">Export system data in various formats for reporting and analysis.</p>
+                        <select id="export-format" class="form-control" style="margin-bottom: 1rem;">
+                            <option value="csv">CSV Format</option>
+                            <option value="excel">Excel Format</option>
+                            <option value="json">JSON Format</option>
+                        </select>
+                        <button class="btn btn-secondary" onclick="exportData()">Export Data</button>
+                    </div>
+                    
+                    <div style="background: var(--light-gray); padding: 2rem; border-radius: 12px; text-align: center;">
+                        <h4 style="color: var(--primary-green); margin-bottom: 1rem;">System Cleanup</h4>
+                        <p style="color: var(--text-light); margin-bottom: 1.5rem;">Remove old temporary files and optimize database performance.</p>
+                        <button class="btn btn-warning" onclick="cleanupSystem()">Run Cleanup</button>
+                        <div id="cleanup-status" style="margin-top: 1rem; display: none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Information -->
+            <div class="content-section">
+                <h3 style="color: var(--primary-green); margin-bottom: 1.5rem;">System Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h4 style="color: var(--dark-green); margin-bottom: 1rem;">Server Information</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Server Status:</label>
+                                <span id="server-status" style="color: var(--primary-green); font-weight: 600;">Online</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Database Status:</label>
+                                <span id="database-status" style="color: var(--primary-green); font-weight: 600;">Connected</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Last Backup:</label>
+                                <span id="last-backup">2025-01-20 02:00:00</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Uptime:</label>
+                                <span id="system-uptime">15 days, 8 hours</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: var(--dark-green); margin-bottom: 1rem;">Usage Statistics</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Total Users:</label>
+                                <span id="total-users">0</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Active Sessions:</label>
+                                <span id="active-sessions">0</span>
+                            </div>
+                            <div class="info-item">
+                                <label>Storage Used:</label>
+                                <span id="storage-used">0 GB</span>
+                            </div>
+                            <div class="info-item">
+                                <label>API Calls Today:</label>
+                                <span id="api-calls">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Log -->
+            <div class="content-section">
+                <h3 style="color: var(--primary-green); margin-bottom: 1.5rem;">Recent Activity Log</h3>
+                <div id="activity-log" style="max-height: 300px; overflow-y: auto;">
+                    <div style="text-align: center; padding: 2rem; color: var(--text-light);">
+                        Loading activity log...
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!token || user.role !== 'ministry') {
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            document.getElementById('user-email').textContent = user.email;
+            
+            initializeSettings();
+        });
+
+        function initializeSettings() {
+            setupFormHandlers();
+            loadUserProfile();
+            loadSystemStats();
+            loadActivityLog();
+        }
+
+        function setupFormHandlers() {
+            // Profile form
+            document.getElementById('profile-form').addEventListener('submit', handleProfileUpdate);
+            
+            // Password form
+            document.getElementById('password-form').addEventListener('submit', handlePasswordChange);
+            
+            // System config form
+            document.getElementById('system-config-form').addEventListener('submit', handleSystemConfigUpdate);
+            
+            // Password confirmation validation
+            document.getElementById('confirm-password').addEventListener('input', validatePasswordMatch);
+        }
+
+        function validatePasswordMatch() {
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const confirmInput = document.getElementById('confirm-password');
+            
+            if (confirmPassword && newPassword !== confirmPassword) {
+                confirmInput.setCustomValidity('Passwords do not match');
+                confirmInput.style.borderColor = '#dc3545';
+            } else {
+                confirmInput.setCustomValidity('');
+                confirmInput.style.borderColor = '';
+            }
+        }
+
+        async function handleProfileUpdate(e) {
+            e.preventDefault();
+            
+            try {
+                const formData = new FormData(e.target);
+                const profileData = {
+                    name: formData.get('name'),
+                    designation: formData.get('designation'),
+                    phone: formData.get('phone'),
+                    office: formData.get('office'),
+                    region: formData.get('region')
+                };
+                
+                // In a real implementation, this would make an API call
+                fraSystem.showNotification('Profile updated successfully!', 'success');
+                
+                // Update local storage
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                user.profile = { ...user.profile, ...profileData };
+                localStorage.setItem('user', JSON.stringify(user));
+                
+            } catch (error) {
+                fraSystem.showNotification('Error updating profile: ' + error.message, 'error');
+            }
+        }
+
+        async function handlePasswordChange(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const newPassword = formData.get('newPassword');
+            const confirmPassword = formData.get('confirmPassword');
+            
+            if (newPassword !== confirmPassword) {
+                fraSystem.showNotification('Passwords do not match!', 'error');
+                return;
+            }
+            
+            try {
+                // In a real implementation, this would make an API call to change password
+                fraSystem.showNotification('Password changed successfully!', 'success');
+                e.target.reset();
+                
+            } catch (error) {
+                fraSystem.showNotification('Error changing password: ' + error.message, 'error');
+            }
+        }
+
+        async function handleSystemConfigUpdate(e) {
+            e.preventDefault();
+            
+            try {
+                const formData = new FormData(e.target);
+                const configData = {
+                    maxFileSize: formData.get('maxFileSize'),
+                    sessionTimeout: formData.get('sessionTimeout'),
+                    autoBackup: formData.get('autoBackup'),
+                    emailNotifications: formData.get('emailNotifications')
+                };
+                
+                // In a real implementation, this would make an API call
+                fraSystem.showNotification('System configuration updated successfully!', 'success');
+                
+            } catch (error) {
+                fraSystem.showNotification('Error updating configuration: ' + error.message, 'error');
+            }
+        }
+
+        function loadUserProfile() {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (user.profile) {
+                document.getElementById('profile-name').value = user.profile.name || '';
+                document.getElementById('profile-designation').value = user.profile.designation || '';
+                document.getElementById('profile-phone').value = user.profile.phone || '';
+                document.getElementById('profile-office').value = user.profile.office || '';
+                document.getElementById('profile-region').value = user.profile.region || '';
+            }
+        }
+
+        async function loadSystemStats() {
+            try {
+                // In a real implementation, these would be API calls
+                document.getElementById('total-users').textContent = '25';
+                document.getElementById('active-sessions').textContent = '8';
+                document.getElementById('storage-used').textContent = '2.5 GB';
+                document.getElementById('api-calls').textContent = '1,247';
+                
+            } catch (error) {
+                console.error('Error loading system stats:', error);
+            }
+        }
+
+        function loadActivityLog() {
+            // Simulate activity log data
+            const activities = [
+                { time: '2025-01-20 14:30:00', action: 'User login', user: 'ministry@example.com', details: 'Successful login from 192.168.1.100' },
+                { time: '2025-01-20 14:25:00', action: 'Patta uploaded', user: 'ministry@example.com', details: 'New patta document processed for Village ABC' },
+                { time: '2025-01-20 14:20:00', action: 'NGO approved', user: 'ministry@example.com', details: 'Approved NGO registration for Tribal Welfare Society' },
+                { time: '2025-01-20 14:15:00', action: 'Assignment created', user: 'ministry@example.com', details: 'New field assignment created for District XYZ' },
+                { time: '2025-01-20 14:10:00', action: 'Policy uploaded', user: 'ministry@example.com', details: 'New policy document: FRA Implementation Guidelines 2025' }
+            ];
+            
+            const container = document.getElementById('activity-log');
+            container.innerHTML = activities.map(activity => `
+                <div style="background: var(--light-gray); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid var(--primary-green);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <strong style="color: var(--primary-green);">${activity.action}</strong>
+                        <span style="color: var(--text-light); font-size: 0.9rem;">${activity.time}</span>
+                    </div>
+                    <p style="margin-bottom: 0.5rem; color: var(--text-dark);">${activity.details}</p>
+                    <small style="color: var(--text-light);">User: ${activity.user}</small>
+                </div>
+            `).join('');
+        }
+
+        // Data management functions
+        async function createBackup() {
+            const statusDiv = document.getElementById('backup-status');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<p style="color: var(--primary-green);">Creating backup...</p>';
+            
+            try {
+                // Simulate backup process
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                statusDiv.innerHTML = `
+                    <p style="color: var(--primary-green);">✓ Backup created successfully!</p>
+                    <small style="color: var(--text-light);">Backup saved as: backup_${new Date().toISOString().split('T')[0]}.sql</small>
+                `;
+                
+                fraSystem.showNotification('Database backup created successfully!', 'success');
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<p style="color: #dc3545;">✗ Backup failed!</p>';
+                fraSystem.showNotification('Error creating backup: ' + error.message, 'error');
+            }
+        }
+
+        async function exportData() {
+            const format = document.getElementById('export-format').value;
+            
+            try {
+                fraSystem.showNotification(`Exporting data in ${format.toUpperCase()} format...`, 'info');
+                
+                // Simulate export process
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Create a dummy download
+                const link = document.createElement('a');
+                link.href = '#';
+                link.download = `fra_data_export_${new Date().toISOString().split('T')[0]}.${format}`;
+                
+                fraSystem.showNotification('Data export completed successfully!', 'success');
+                
+            } catch (error) {
+                fraSystem.showNotification('Error exporting data: ' + error.message, 'error');
+            }
+        }
+
+        async function cleanupSystem() {
+            const statusDiv = document.getElementById('cleanup-status');
+            statusDiv.style.display = 'block';
+            statusDiv.innerHTML = '<p style="color: var(--primary-green);">Running system cleanup...</p>';
+            
+            try {
+                // Simulate cleanup process
+                await new Promise(resolve => setTimeout(resolve, 4000));
+                
+                statusDiv.innerHTML = `
+                    <p style="color: var(--primary-green);">✓ System cleanup completed!</p>
+                    <small style="color: var(--text-light);">
+                        • Removed 25 temporary files<br>
+                        • Optimized database tables<br>
+                        • Cleared cache files<br>
+                        • Freed up 150 MB of storage
+                    </small>
+                `;
+                
+                fraSystem.showNotification('System cleanup completed successfully!', 'success');
+                
+            } catch (error) {
+                statusDiv.innerHTML = '<p style="color: #dc3545;">✗ Cleanup failed!</p>';
+                fraSystem.showNotification('Error during system cleanup: ' + error.message, 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '../login.html';
+        }
+    </script>
+
+    <style>
+        .info-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-item label {
+            color: var(--text-light);
+            font-weight: 500;
+        }
+        
+        .info-item span {
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+    </style>
+</body>
+</html>

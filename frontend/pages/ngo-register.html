@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Registration - FRA Patta Management</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <h1>FRA Patta Management System</h1>
+                <p>NGO Registration Portal</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="form-container" style="max-width: 700px;">
+                <h2 style="text-align: center; color: var(--primary-green); margin-bottom: 2rem;">NGO Registration</h2>
+                
+                <div id="alert-container"></div>
+                
+                <form id="ngoRegistrationForm">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">Password *</label>
+                            <input type="password" id="password" name="password" class="form-control" required minlength="6">
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="organizationName">Organization Name *</label>
+                            <input type="text" id="organizationName" name="organizationName" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contactPersonName">Contact Person Name *</label>
+                            <input type="text" id="contactPersonName" name="contactPersonName" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label for="district">Primary District *</label>
+                            <input type="text" id="district" name="district" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="contactNumber">Contact Number</label>
+                            <input type="tel" id="contactNumber" name="contactNumber" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="areaOfOperation">Area of Operation *</label>
+                        <textarea id="areaOfOperation" name="areaOfOperation" class="form-control" rows="3" required placeholder="Describe the geographical areas and communities you work with"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="address">Complete Address</label>
+                        <textarea id="address" name="address" class="form-control" rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="experience">Previous Experience with Tribal Communities</label>
+                        <textarea id="experience" name="experience" class="form-control" rows="4" placeholder="Describe your organization's experience working with tribal communities and forest rights"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="agreeTerms" required style="margin-right: 0.5rem;">
+                            I agree to the terms and conditions and confirm that all information provided is accurate *
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                        <span id="register-text">Submit Registration</span>
+                        <span id="register-loading" class="loading" style="display: none;"></span>
+                    </button>
+                </form>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <p>Already registered? <a href="login.html" style="color: var(--primary-green); text-decoration: none; font-weight: 600;">Login Here</a></p>
+                    <p><a href="../index.html" style="color: var(--text-light); text-decoration: none;">← Back to Home</a></p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Forest Rights Act Digital Platform</p>
+        </footer>
+    </div>
+
+    <script src="../assets/js/main.js"></script>
+    <script>
+        document.getElementById('ngoRegistrationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const registerButton = e.target.querySelector('button[type="submit"]');
+            const registerText = document.getElementById('register-text');
+            const registerLoading = document.getElementById('register-loading');
+            const alertContainer = document.getElementById('alert-container');
+            
+            // Show loading state
+            registerText.style.display = 'none';
+            registerLoading.style.display = 'inline-block';
+            registerButton.disabled = true;
+            
+            const formData = new FormData(e.target);
+            const registrationData = {
+                email: formData.get('email'),
+                password: formData.get('password'),
+                profile: {
+                    name: formData.get('contactPersonName'),
+                    organization: formData.get('organizationName'),
+                    district: formData.get('district'),
+                    areaOfOperation: formData.get('areaOfOperation'),
+                    contactNumber: formData.get('contactNumber'),
+                    address: formData.get('address'),
+                    experience: formData.get('experience')
+                }
+            };
+            
+            try {
+                const response = await fetch('/api/ngo/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(registrationData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Registration submitted successfully! You will receive an email once your application is approved by the Ministry.', 'success');
+                    e.target.reset();
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            } catch (error) {
+                showAlert('Connection error. Please try again.', 'error');
+            } finally {
+                // Reset loading state
+                registerText.style.display = 'inline';
+                registerLoading.style.display = 'none';
+                registerButton.disabled = false;
+            }
+        });
+        
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alert-container');
+            alertContainer.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                alertContainer.innerHTML = '';
+            }, 8000);
+        }
+    </script>
+</body>
+</html>

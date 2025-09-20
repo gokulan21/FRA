@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - FRA Patta Management</title>
+    <link rel="stylesheet" href="../assets/css/main.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <h1>FRA Patta Management System</h1>
+                <p>Secure Login Portal</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="form-container">
+                <h2 style="text-align: center; color: var(--primary-green); margin-bottom: 2rem;">System Login</h2>
+                
+                <div id="alert-container"></div>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="role">Role</label>
+                        <select id="role" name="role" class="form-control" required>
+                            <option value="">Select Role</option>
+                            <option value="ministry">Ministry Official</option>
+                            <option value="ngo">NGO Representative</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                        <span id="login-text">Login</span>
+                        <span id="login-loading" class="loading" style="display: none;"></span>
+                    </button>
+                </form>
+                
+                <div style="text-align: center; margin-top: 2rem;">
+                    <p>NGO not registered? <a href="ngo-register.html" style="color: var(--primary-green); text-decoration: none; font-weight: 600;">Register Here</a></p>
+                    <p><a href="../index.html" style="color: var(--text-light); text-decoration: none;">← Back to Home</a></p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 Forest Rights Act Digital Platform</p>
+        </footer>
+    </div>
+
+    <script src="../assets/js/main.js"></script>
+    <script>
+       document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const loginButton = e.target.querySelector('button[type="submit"]');
+    const loginText = document.getElementById('login-text');
+    const loginLoading = document.getElementById('login-loading');
+    const alertContainer = document.getElementById('alert-container');
+    
+    // Show loading state
+    loginText.style.display = 'none';
+    loginLoading.style.display = 'inline-block';
+    loginButton.disabled = true;
+    
+    const formData = new FormData(e.target);
+    const loginData = {
+        email: formData.get('email'),
+        password: formData.get('password'),
+        role: formData.get('role')
+    };
+    
+    try {
+        console.log('Attempting login with:', loginData); // Debug log
+        
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(loginData)
+        });
+        
+        console.log('Response status:', response.status); // Debug log
+        
+        const data = await response.json();
+        console.log('Response data:', data); // Debug log
+        
+        if (response.ok) {
+            // Store token and user data
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            
+            showAlert('Login successful! Redirecting...', 'success');
+            
+            // Redirect based on role
+            setTimeout(() => {
+                if (data.user.role === 'ministry') {
+                    window.location.href = 'ministry/dashboard.html';
+                } else {
+                    window.location.href = 'ngo/dashboard.html';
+                }
+            }, 1000);
+        } else {
+            showAlert(data.message || 'Login failed', 'error');
+        }
+    } catch (error) {
+        console.error('Login error:', error); // Debug log
+        showAlert('Connection error. Please check if the server is running.', 'error');
+    } finally {
+        // Reset loading state
+        loginText.style.display = 'inline';
+        loginLoading.style.display = 'none';
+        loginButton.disabled = false;
+    }
+});
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alert-container');
+    alertContainer.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    setTimeout(() => {
+        alertContainer.innerHTML = '';
+    }, 5000);
+}
+    </script>
+</body>
+</html>

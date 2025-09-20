@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Dashboard - FRA Patta Management</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/ngo.css">
+</head>
+<body class="ngo-dashboard">
+    <header class="ngo-header">
+        <div class="container">
+            <h1>NGO Dashboard</h1>
+            <div class="user-info">
+                <span id="ngo-name"></span>
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <nav class="ngo-nav">
+            <ul>
+                <li><a href="#" class="nav-link active" data-section="overview">Overview</a></li>
+                <li><a href="#" class="nav-link" data-section="assignments">My Assignments</a></li>
+                <li><a href="#" class="nav-link" data-section="reports">Submit Reports</a></li>
+                <li><a href="#" class="nav-link" data-section="policies">Policies</a></li>
+            </ul>
+        </nav>
+
+        <main class="ngo-main-content">
+            <!-- Overview Section -->
+            <div id="overview-section" class="ngo-content-section">
+                <h2>Dashboard Overview</h2>
+                
+                <div class="ngo-stats-grid">
+                    <div class="ngo-stat-card">
+                        <h3 id="total-assignments">0</h3>
+                        <p>Total Assignments</p>
+                    </div>
+                    <div class="ngo-stat-card">
+                        <h3 id="active-assignments">0</h3>
+                        <p>Active Assignments</p>
+                    </div>
+                    <div class="ngo-stat-card">
+                        <h3 id="completed-assignments">0</h3>
+                        <p>Completed</p>
+                    </div>
+                    <div class="ngo-stat-card">
+                        <h3 id="overdue-assignments">0</h3>
+                        <p>Overdue</p>
+                    </div>
+                </div>
+
+                <div style="background: var(--light-gray); padding: 2rem; border-radius: 12px;">
+                    <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Welcome to FRA Field Operations</h3>
+                    <p style="line-height: 1.8; margin-bottom: 1rem;">
+                        As a registered NGO partner, you play a crucial role in implementing the Forest Rights Act at the grassroots level. 
+                        Your field work helps ensure that tribal communities receive their rightful land titles and benefits from forest resources.
+                    </p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+                        <div style="background: var(--white); padding: 1.5rem; border-radius: 8px;">
+                            <h4 style="color: var(--dark-green); margin-bottom: 0.5rem;">Community Outreach</h4>
+                            <p>Inform tribal families about their rights and assist them in the application process.</p>
+                        </div>
+                        <div style="background: var(--white); padding: 1.5rem; border-radius: 8px;">
+                            <h4 style="color: var(--dark-green); margin-bottom: 0.5rem;">Data Collection</h4>
+                            <p>Gather accurate information about land usage and community needs.</p>
+                        </div>
+                        <div style="background: var(--white); padding: 1.5rem; border-radius: 8px;">
+                            <h4 style="color: var(--dark-green); margin-bottom: 0.5rem;">Progress Monitoring</h4>
+                            <p>Track implementation progress and report challenges to the Ministry.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Assignments Section -->
+            <div id="assignments-section" class="ngo-content-section" style="display: none;">
+                <h2>My Assignments</h2>
+                
+                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <select id="assignment-filter" class="form-control" style="width: 200px;">
+                            <option value="">All Assignments</option>
+                            <option value="active">Active</option>
+                            <option value="completed">Completed</option>
+                            <option value="overdue">Overdue</option>
+                        </select>
+                    </div>
+                    <div>
+                        <input type="text" id="assignment-search" placeholder="Search assignments..." class="form-control" style="width: 250px;">
+                    </div>
+                </div>
+
+                <div id="assignments-list">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-light);">
+                        Loading assignments...
+                    </div>
+                </div>
+
+                <div id="assignments-pagination" style="text-align: center; margin-top: 2rem;">
+                    <!-- Pagination will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reports-section" class="ngo-content-section" style="display: none;">
+                <h2>Submit Field Report</h2>
+                
+                <div id="report-assignment-selector" style="margin-bottom: 2rem;">
+                    <label for="report-assignment">Select Assignment:</label>
+                    <select id="report-assignment" class="form-control">
+                        <option value="">Choose an assignment to report on</option>
+                    </select>
+                </div>
+
+                <form id="report-form" class="report-form" style="display: none;">
+                    <h3>Field Report Details</h3>
+                    
+                    <div class="form-group">
+                        <label for="report-summary">Executive Summary *</label>
+                        <textarea id="report-summary" class="form-control" rows="4" required 
+                                  placeholder="Provide a brief summary of your field visit and key outcomes"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="villages-visited">Villages Visited</label>
+                            <input type="text" id="villages-visited" class="form-control" 
+                                   placeholder="e.g., Village A, Village B, Village C">
+                        </div>
+                        <div class="form-group">
+                            <label for="beneficiaries-reached">Beneficiaries Reached</label>
+                            <input type="number" id="beneficiaries-reached" class="form-control" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="key-findings">Key Findings</label>
+                        <textarea id="key-findings" class="form-control" rows="4" 
+                                  placeholder="Describe important observations, issues discovered, or progress made"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recommendations">Recommendations</label>
+                        <textarea id="recommendations" class="form-control" rows="4" 
+                                  placeholder="Suggest actions or improvements for better implementation"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="challenges-faced">Challenges Faced</label>
+                        <textarea id="challenges-faced" class="form-control" rows="4" 
+                                  placeholder="Describe any obstacles or difficulties encountered"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Supporting Documents/Photos</label>
+                        <div class="file-upload-area" onclick="document.getElementById('report-files').click()">
+                            <div style="font-size: 2rem; color: var(--primary-green); margin-bottom: 1rem;">📁</div>
+                            <p>Click to upload or drag & drop files</p>
+                            <p style="font-size: 0.9rem; color: var(--text-light);">Images, PDFs, Documents (Max 5 files, 10MB each)</p>
+                            <input type="file" id="report-files" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" style="display: none;">
+                        </div>
+                        <div id="file-list" class="file-list"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="additional-notes">Additional Notes</label>
+                        <textarea id="additional-notes" class="form-control" rows="3" 
+                                  placeholder="Any other information you'd like to share"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <span id="submit-report-text">Submit Report</span>
+                        <span id="submit-report-loading" class="loading" style="display: none;"></span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Policies Section -->
+            <div id="policies-section" class="ngo-content-section" style="display: none;">
+                <h2>Policy Documents & Guidelines</h2>
+                
+                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <select id="policy-category-filter" class="form-control" style="width: 200px;">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+                    <div>
+                        <input type="text" id="policy-search" placeholder="Search policies..." class="form-control" style="width: 250px;">
+                    </div>
+                </div>
+
+                <div id="policies-list">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-light);">
+                        Loading policy documents...
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/main.js"></script>
+    <script src="../../assets/js/ngo.js"></script>
+</body>
+</html>

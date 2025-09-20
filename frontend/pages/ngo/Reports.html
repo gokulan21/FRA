@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Reports - NGO Dashboard</title>
+    <link rel="stylesheet" href="../../assets/css/main.css">
+    <link rel="stylesheet" href="../../assets/css/ngo.css">
+</head>
+<body class="ngo-dashboard">
+    <header class="ngo-header">
+        <div class="container">
+            <h1>Submit Field Reports</h1>
+            <div class="user-info">
+                <span id="ngo-name"></span>
+                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <nav class="ngo-nav">
+            <ul>
+                <li><a href="dashboard.html" class="nav-link">Overview</a></li>
+                <li><a href="assignments.html" class="nav-link">My Assignments</a></li>
+                <li><a href="reports.html" class="nav-link active">Submit Reports</a></li>
+                <li><a href="#" class="nav-link" onclick="loadPolicies()">Policies</a></li>
+            </ul>
+        </nav>
+
+        <main class="ngo-main-content">
+            <!-- Assignment Selection -->
+            <div class="ngo-content-section">
+                <h2>Select Assignment for Reporting</h2>
+                
+                <div style="margin-bottom: 2rem;">
+                    <div class="form-group">
+                        <label for="report-assignment-select">Choose Assignment:</label>
+                        <select id="report-assignment-select" class="form-control">
+                            <option value="">Select an assignment to report on</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="selected-assignment-info" style="display: none; background: var(--light-gray); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                    <h4 style="color: var(--primary-green); margin-bottom: 1rem;">Assignment Information</h4>
+                    <div id="assignment-details"></div>
+                </div>
+            </div>
+
+            <!-- Report Form -->
+            <div id="report-form-section" class="ngo-content-section" style="display: none;">
+                <h2>Field Report Submission</h2>
+                
+                <form id="field-report-form" class="report-form">
+                    <div class="form-group">
+                        <label for="report-title">Report Title *</label>
+                        <input type="text" id="report-title" name="title" class="form-control" required 
+                               placeholder="e.g., Field Survey Report - Village ABC">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="report-summary">Executive Summary *</label>
+                        <textarea id="report-summary" name="summary" class="form-control" rows="4" required 
+                                  placeholder="Provide a comprehensive summary of your field visit, key activities conducted, and main outcomes achieved"></textarea>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="villages-visited">Villages Visited</label>
+                            <input type="text" id="villages-visited" name="villagesVisited" class="form-control" 
+                                   placeholder="Comma-separated list of villages">
+                        </div>
+                        <div class="form-group">
+                            <label for="beneficiaries-reached">Total Beneficiaries Reached</label>
+                            <input type="number" id="beneficiaries-reached" name="beneficiariesReached" class="form-control" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="families-surveyed">Families Surveyed</label>
+                            <input type="number" id="families-surveyed" name="familiesSurveyed" class="form-control" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="applications-processed">Applications Processed</label>
+                            <input type="number" id="applications-processed" name="applicationsProcessed" class="form-control" min="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="key-findings">Key Findings *</label>
+                        <textarea id="key-findings" name="findings" class="form-control" rows="5" required 
+                                  placeholder="Describe important observations, issues discovered, community needs identified, or progress made during your field work"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="recommendations">Recommendations *</label>
+                        <textarea id="recommendations" name="recommendations" class="form-control" rows="4" required 
+                                  placeholder="Provide specific recommendations for improving FRA implementation, addressing identified challenges, or enhancing community support"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="challenges-faced">Challenges Encountered</label>
+                        <textarea id="challenges-faced" name="challenges" class="form-control" rows="4" 
+                                  placeholder="Describe any obstacles, difficulties, or barriers encountered during the field work and how they were addressed"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="community-feedback">Community Feedback</label>
+                        <textarea id="community-feedback" name="communityFeedback" class="form-control" rows="3" 
+                                  placeholder="Share feedback, concerns, or suggestions received from community members"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="follow-up-actions">Proposed Follow-up Actions</label>
+                        <textarea id="follow-up-actions" name="followUpActions" class="form-control" rows="3" 
+                                  placeholder="Suggest next steps, follow-up activities, or additional support needed"></textarea>
+                    </div>
+
+                    <!-- File Upload Section -->
+                    <div class="form-group">
+                        <label>Supporting Documents & Photos</label>
+                        <div class="file-upload-area" onclick="document.getElementById('report-files').click()">
+                            <div style="font-size: 2rem; color: var(--primary-green); margin-bottom: 1rem;">📎</div>
+                            <h4>Upload Supporting Files</h4>
+                            <p>Photos, documents, surveys, or other evidence</p>
+                            <p style="font-size: 0.9rem; color: var(--text-light);">
+                                Supported formats: JPG, PNG, PDF, DOC, DOCX<br>
+                                Maximum 10 files, 10MB each
+                            </p>
+                            <input type="file" id="report-files" name="reportFiles" multiple 
+                                   accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" style="display: none;">
+                        </div>
+                        
+                        <div id="uploaded-files-list" class="file-list"></div>
+                    </div>
+
+                    <!-- GPS Coordinates -->
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="gps-latitude">GPS Latitude</label>
+                            <input type="number" id="gps-latitude" name="gpsLatitude" class="form-control" 
+                                   step="any" placeholder="e.g., 20.5937">
+                        </div>
+                        <div class="form-group">
+                            <label for="gps-longitude">GPS Longitude</label>
+                            <input type="number" id="gps-longitude" name="gpsLongitude" class="form-control" 
+                                   step="any" placeholder="e.g., 78.9629">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" onclick="getCurrentLocation()">
+                            📍 Get Current Location
+                        </button>
+                        <small style="color: var(--text-light); margin-left: 1rem;">
+                            Click to automatically fill GPS coordinates
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="additional-notes">Additional Notes</label>
+                        <textarea id="additional-notes" name="additionalNotes" class="form-control" rows="3" 
+                                  placeholder="Any other relevant information or observations"></textarea>
+                    </div>
+
+                    <!-- Submission Progress -->
+                    <div id="submission-progress" class="progress-indicator" style="display: none;">
+                        <h4>Submitting Report...</h4>
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill" style="width: 0%;"></div>
+                        </div>
+                        <p id="progress-status">Preparing submission...</p>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1;">
+                            <span id="submit-report-text">Submit Field Report</span>
+                            <span id="submit-report-loading" class="loading" style="display: none;"></span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="saveDraft()">
+                            Save as Draft
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                            Reset Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Previous Reports -->
+            <div class="ngo-content-section">
+                <h2>Previous Reports</h2>
+                
+                <div id="previous-reports">
+                    <div style="text-align: center; padding: 3rem; color: var(--text-light);">
+                        Loading previous reports...
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../../assets/js/main.js"></script>
+    <script>
+        let selectedFiles = [];
+        let currentAssignment = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check authentication
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!token || user.role !== 'ngo') {
+                window.location.href = '../login.html';
+                return;
+            }
+            
+            document.getElementById('ngo-name').textContent = user.profile?.name || user.email;
+            
+            initializeReportsPage();
+        });
+
+        function initializeReportsPage() {
+            setupFormHandlers();
+            setupFileUpload();
+            loadAssignmentsForReporting();
+            loadPreviousReports();
+            
+            // Check if assignment ID is passed in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const assignmentId = urlParams.get('assignment');
+            if (assignmentId) {
+                document.getElementById('report-assignment-select').value = assignmentId;
+                loadAssignmentDetails(assignmentId);
+            }
+        }
+
+        function setupFormHandlers() {
+            const assignmentSelect = document.getElementById('report-assignment-select');
+            const reportForm = document.getElementById('field-report-form');
+            
+            assignmentSelect.addEventListener('change', (e) => {
+                if (e.target.value) {
+                    loadAssignmentDetails(e.target.value);
+                } else {
+                    document.getElementById('selected-assignment-info').style.display = 'none';
+                    document.getElementById('report-form-section').style.display = 'none';
+                }
+            });
+            
+            reportForm.addEventListener('submit', handleReportSubmission);
+        }
+
+        async function loadAssignmentsForReporting() {
+            try {
+                const response = await fraSystem.apiRequest('/assignment/my-assignments?status=in-progress,active');
+                const select = document.getElementById('report-assignment-select');
+                
+                select.innerHTML = '<option value="">Select an assignment to report on</option>';
+                
+                if (response.assignments && response.assignments.length > 0) {
+                    response.assignments.forEach(assignment => {
+                        const option = document.createElement('option');
+                        option.value = assignment._id;
+                        option.textContent = `${assignment.title || assignment.area.district} - Deadline: ${fraSystem.formatDate(assignment.deadline)}`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">No active assignments available for reporting</option>';
+                }
+                
+            } catch (error) {
+                fraSystem.showNotification('Error loading assignments: ' + error.message, 'error');
+            }
+        }
+
+        async function loadAssignmentDetails(assignmentId) {
+            try {
+                const assignment = await fraSystem.apiRequest(`/assignment/${assignmentId}`);
+                currentAssignment = assignment;
+                
+                displayAssignmentInfo(assignment);
+                document.getElementById('selected-assignment-info').style.display = 'block';
+                document.getElementById('report-form-section').style.display = 'block';
+                
+                // Pre-fill form fields if available
+                if (assignment.area.villages) {
+                    document.getElementById('villages-visited').value = assignment.area.villages.join(', ');
+                }
+                
+            } catch (error) {
+                fraSystem.showNotification('Error loading assignment details: ' + error.message, 'error');
+            }
+        }
+
+        function displayAssignmentInfo(assignment) {
+            const container = document.getElementById('assignment-details');
+            
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div>
+                        <strong>Title:</strong> ${assignment.title || assignment.area.district}
+                    </div>
+                    <div>
+                        <strong>Area:</strong> ${assignment.area.district}
+                    </div>
+                    <div>
+                        <strong>Deadline:</strong> ${fraSystem.formatDate(assignment.deadline)}
+                    </div>
+                    <div>
+                        <strong>Priority:</strong> ${assignment.priority.toUpperCase()}
+                    </div>
+                    <div>
+                        <strong>Status:</strong> ${assignment.status.replace('-', ' ').toUpperCase()}
+                    </div>
+                    <div>
+                        <strong>Progress:</strong> ${assignment.progress || 0}%
+                    </div>
+                </div>
+                
+                ${assignment.area.villages && assignment.area.villages.length > 0 ? `
+                    <div style="margin-top: 1rem;">
+                        <strong>Target Villages:</strong> ${assignment.area.villages.join(', ')}
+                    </div>
+                ` : ''}
+                
+                <div style="margin-top: 1rem;">
+                    <strong>Instructions:</strong>
+                    <p style="margin: 0.5rem 0 0 0; padding: 1rem; background: var(--white); border-radius: 6px;">
+                        ${assignment.instructions}
+                    </p>
+                </div>
+            `;
+        }
+
+        function setupFileUpload() {
+            const fileInput = document.getElementById('report-files');
+            const uploadArea = document.querySelector('.file-upload-area');
+            const filesList = document.getElementById('uploaded-files-list');
+            
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                
+                const files = Array.from(e.dataTransfer.files);
+                handleFileSelection(files);
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                const files = Array.from(e.target.files);
+                handleFileSelection(files);
+            });
+            
+            function handleFileSelection(files) {
+                // Limit to 10 files total
+                const remainingSlots = 10 - selectedFiles.length;
+                const filesToAdd = files.slice(0, remainingSlots);
+                
+                selectedFiles = [...selectedFiles, ...filesToAdd];
+                displaySelectedFiles();
+                
+                if (files.length > remainingSlots) {
+                    fraSystem.showNotification(`Only ${remainingSlots} files could be added. Maximum 10 files allowed.`, 'warning');
+                }
+            }
+            
+            function displaySelectedFiles() {
+                filesList.innerHTML = selectedFiles.map((file, index) => `
+                    <div class="file-item">
+                        <span>${file.name} (${fraSystem.formatFileSize(file.size)})</span>
+                        <button type="button" onclick="removeFile(${index})" 
+                                style="background: none; border: none; color: #dc3545; cursor: pointer; font-size: 1.2rem;">×</button>
+                    </div>
+                `).join('');
+            }
+            
+            window.removeFile = (index) => {
+                selectedFiles.splice(index, 1);
+                displaySelectedFiles();
+            };
+        }
+
+        async function handleReportSubmission(e) {
+            e.preventDefault();
+            
+            if (!currentAssignment) {
+                fraSystem.showNotification('Please select an assignment first', 'error');
+                return;
+            }
+            
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const submitText = document.getElementById('submit-report-text');
+            const submitLoading = document.getElementById('submit-report-loading');
+            const progressSection = document.getElementById('submission-progress');
+            const progressFill = document.getElementById('progress-fill');
+            const progressStatus = document.getElementById('progress-status');
+            
+            try {
+                // Show loading states
+                submitText.style.display = 'none';
+                submitLoading.style.display = 'inline-block';
+                submitButton.disabled = true;
+                progressSection.style.display = 'block';
+                
+                // Prepare form data
+                const formData = new FormData();
+                const form = e.target;
+                
+                // Add text fields
+                const textFields = [
+                    'title', 'summary', 'villagesVisited', 'beneficiariesReached', 
+                    'familiesSurveyed', 'applicationsProcessed', 'findings', 
+                    'recommendations', 'challenges', 'communityFeedback', 
+                    'followUpActions', 'gpsLatitude', 'gpsLongitude', 'additionalNotes'
+                ];
+                
+                textFields.forEach(field => {
+                    const value = form.elements[field]?.value;
+                    if (value) {
+                        formData.append(field, value);
+                    }
+                });
+                
+                // Update progress
+                progressFill.style.width = '20%';
+                progressStatus.textContent = 'Preparing report data...';
+                
+                // Add files
+                selectedFiles.forEach(file => {
+                    formData.append('reportFiles', file);
+                });
+                
+                progressFill.style.width = '40%';
+                progressStatus.textContent = 'Uploading files...';
+                
+                // Submit report
+                const response = await fetch(`/api/assignment/${currentAssignment._id}/report`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: formData
+                });
+                
+                progressFill.style.width = '80%';
+                progressStatus.textContent = 'Processing submission...';
+                
+                if (response.ok) {
+                    progressFill.style.width = '100%';
+                    progressStatus.textContent = 'Report submitted successfully!';
+                    
+                    fraSystem.showNotification('Field report submitted successfully!', 'success');
+                    
+                    // Reset form and reload data
+                    resetForm();
+                    loadAssignmentsForReporting();
+                    loadPreviousReports();
+                    
+                    // Hide progress after delay
+                    setTimeout(() => {
+                        progressSection.style.display = 'none';
+                    }, 3000);
+                    
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message);
+                }
+                
+            } catch (error) {
+                progressStatus.textContent = 'Submission failed!';
+                fraSystem.showNotification('Error submitting report: ' + error.message, 'error');
+            } finally {
+                // Reset loading states
+                submitText.style.display = 'inline';
+                submitLoading.style.display = 'none';
+                submitButton.disabled = false;
+            }
+        }
+
+        async function loadPreviousReports() {
+            try {
+                const response = await fraSystem.apiRequest('/assignment/my-assignments?status=completed');
+                const container = document.getElementById('previous-reports');
+                
+                const completedAssignments = response.assignments.filter(a => a.report);
+                
+                if (completedAssignments.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 3rem; color: var(--text-light);">
+                            <h4>No previous reports</h4>
+                            <p>You haven't submitted any reports yet.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = completedAssignments.map(assignment => `
+                    <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid var(--primary-green);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                            <div>
+                                <h4 style="color: var(--primary-green); margin-bottom: 0.5rem;">
+                                    ${assignment.title || assignment.area.district}
+                                </h4>
+                                <p style="color: var(--text-light); margin: 0;">
+                                    Submitted: ${fraSystem.formatDate(assignment.report.submittedAt)}
+                                </p>
+                            </div>
+                            <span class="status-badge verified">COMPLETED</span>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <strong>Report Summary:</strong>
+                            <p style="margin: 0.5rem 0 0 0; color: var(--text-dark);">
+                                ${assignment.report.summary.substring(0, 200)}...
+                            </p>
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary btn-small" onclick="viewFullReport('${assignment._id}')">
+                                View Full Report
+                            </button>
+                            <button class="btn btn-primary btn-small" onclick="downloadReport('${assignment._id}')">
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                fraSystem.showNotification('Error loading previous reports: ' + error.message, 'error');
+            }
+        }
+
+        // Utility functions
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        document.getElementById('gps-latitude').value = position.coords.latitude.toFixed(6);
+                        document.getElementById('gps-longitude').value = position.coords.longitude.toFixed(6);
+                        fraSystem.showNotification('Location captured successfully!', 'success');
+                    },
+                    (error) => {
+                        fraSystem.showNotification('Unable to get location: ' + error.message, 'error');
+                    }
+                );
+            } else {
+                fraSystem.showNotification('Geolocation is not supported by this browser', 'error');
+            }
+        }
+
+        function saveDraft() {
+            const formData = new FormData(document.getElementById('field-report-form'));
+            const draftData = {};
+            
+            for (let [key, value] of formData.entries()) {
+                draftData[key] = value;
+            }
+            
+            localStorage.setItem('report_draft_' + currentAssignment._id, JSON.stringify(draftData));
+            fraSystem.showNotification('Draft saved successfully!', 'success');
+        }
+
+        function resetForm() {
+            document.getElementById('field-report-form').reset();
+            selectedFiles = [];
+            document.getElementById('uploaded-files-list').innerHTML = '';
+            document.getElementById('selected-assignment-info').style.display = 'none';
+            document.getElementById('report-form-section').style.display = 'none';
+            document.getElementById('report-assignment-select').value = '';
+            currentAssignment = null;
+        }
+
+        // Action functions
+        window.viewFullReport = async (assignmentId) => {
+            try {
+                const assignment = await fraSystem.apiRequest(`/assignment/${assignmentId}`);
+                
+                if (assignment.report) {
+                    const report = assignment.report;
+                    const reportDetails = `
+Field Report Details:
+
+Assignment: ${assignment.title || assignment.area.district}
+Submitted: ${fraSystem.formatDate(report.submittedAt)}
+
+Summary:
+${report.summary}
+
+Findings:
+${Array.isArray(report.findings) ? report.findings.join('\n') : report.findings}
+
+Recommendations:
+${Array.isArray(report.recommendations) ? report.recommendations.join('\n') : report.recommendations}
+
+Challenges:
+${Array.isArray(report.challenges) ? report.challenges.join('\n') : report.challenges}
+
+Villages Visited: ${report.villagesVisited || 'Not specified'}
+Beneficiaries Reached: ${report.beneficiariesReached || 'Not specified'}
+                    `;
+                    
+                    alert(reportDetails);
+                }
+                
+            } catch (error) {
+                fraSystem.showNotification('Error loading report details: ' + error.message, 'error');
+            }
+        };
+
+        window.downloadReport = (assignmentId) => {
+            fraSystem.showNotification('Report download functionality would be implemented here', 'info');
+        };
+
+        function loadPolicies() {
+            window.location.href = 'dashboard.html#policies';
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '../login.html';
+        }
+    </script>
+</body>
+</html>
