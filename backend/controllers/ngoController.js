@@ -46,6 +46,8 @@ exports.registerNGO = async (req, res) => {
 
 exports.getAllNGOs = async (req, res) => {
     try {
+        console.log('Getting all NGOs - Query params:', req.query); // Debug log
+        
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
@@ -58,6 +60,8 @@ exports.getAllNGOs = async (req, res) => {
             filter['profile.district'] = new RegExp(req.query.district, 'i');
         }
 
+        console.log('NGO filter:', filter); // Debug log
+
         const ngos = await User.find(filter)
             .select('-password')
             .sort({ createdAt: -1 })
@@ -65,6 +69,8 @@ exports.getAllNGOs = async (req, res) => {
             .limit(limit);
 
         const total = await User.countDocuments(filter);
+
+        console.log('Found NGOs:', ngos.length, 'Total:', total); // Debug log
 
         res.json({
             ngos,

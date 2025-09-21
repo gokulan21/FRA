@@ -4,32 +4,37 @@ const path = require('path');
 
 class PDFExtractor {
     constructor() {
-        // Regular expressions for extracting different fields
+        // Enhanced regular expressions for better extraction
         this.patterns = {
             claimantName: [
-                /(?:claimant|applicant|name)[:\s]*([a-zA-Z\s]+)/i,
+                /(?:claimant|applicant|name|holder)[:\s]*([a-zA-Z\s]+)/i,
                 /name[:\s]*([a-zA-Z\s]+)/i,
-                /श्री[.\s]*([a-zA-Z\s\u0900-\u097F]+)/i
+                /श्री[.\s]*([a-zA-Z\s\u0900-\u097F]+)/i,
+                /holder[:\s]*([a-zA-Z\s]+)/i,
+                /beneficiary[:\s]*([a-zA-Z\s]+)/i
             ],
             district: [
                 /district[:\s]*([a-zA-Z\s]+)/i,
-                /जिला[:\s]*([a-zA-Z\s\u0900-\u097F]+)/i
+                /जिला[:\s]*([a-zA-Z\s\u0900-\u097F]+)/i,
+                /dist[:\s]*([a-zA-Z\s]+)/i
             ],
             village: [
                 /village[:\s]*([a-zA-Z\s]+)/i,
-                /गाँव[:\s]*([a-zA-Z\s\u0900-\u097F]+)/i
+                /गाँव[:\s]*([a-zA-Z\s\u0900-\u097F]+)/i,
+                /gram[:\s]*([a-zA-Z\s]+)/i
             ],
             state: [
                 /state[:\s]*([a-zA-Z\s]+)/i,
                 /राज्य[:\s]*([a-zA-Z\s\u0900-\u097F]+)/i
             ],
             landArea: [
-                /(?:area|land)[:\s]*([0-9.]+)\s*(?:hectare|acre|ha)/i,
-                /क्षेत्रफल[:\s]*([0-9.]+)/i
+                /(?:area|land|क्षेत्रफल)[:\s]*([0-9.]+)\s*(?:hectare|acre|ha|एकड़)/i,
+                /([0-9.]+)\s*(?:hectare|acre|ha|एकड़)/i,
+                /area[:\s]*([0-9.]+)/i
             ],
             approvalDate: [
-                /(?:approval|approved)[:\s]*(?:date|on)[:\s]*([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4})/i,
-                /(?:date|dated)[:\s]*([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4})/i
+                /(?:approval|approved|date|dated)[:\s]*([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4})/i,
+                /([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4})/g
             ]
         };
     }
@@ -39,9 +44,11 @@ class PDFExtractor {
             const extractedData = {};
             
             if (path.extname(filePath).toLowerCase() === '.pdf') {
-                extractedData = await this.extractFromPDF(filePath);
+                const result = await this.extractFromPDF(filePath);
+                Object.assign(extractedData, result);
             } else {
-                extractedData = await this.extractFromDocument(filePath);
+                const result = await this.extractFromDocument(filePath);
+                Object.assign(extractedData, result);
             }
 
             // Post-process and validate extracted data
@@ -51,10 +58,11 @@ class PDFExtractor {
             console.error('Error extracting patta data:', error);
             return {
                 error: 'Failed to extract data from document',
-                claimantName: 'Unknown',
-                district: 'Unknown',
-                village: 'Unknown',
-                state: 'Unknown'
+                claimantName: 'Document Processing Required',
+                district: 'Manual Entry Required',
+                village: 'Manual Entry Required',
+                state: 'Manual Entry Required',
+                extractionNote: 'Please verify extracted information'
             };
         }
     }
@@ -64,19 +72,25 @@ class PDFExtractor {
         const pdfData = await pdf(dataBuffer);
         const text = pdfData.text;
 
+        console.log('PDF Text extracted:', text.substring(0, 500)); // Debug log
         return this.extractFieldsFromText(text);
     }
 
     async extractFromDocument(filePath) {
-        // For DOC/DOCX files, we would need additional libraries
-        // For now, return basic structure
-        return {
-            claimantName: 'Document Processing Required',
-            district: 'Manual Entry Required',
-            village: 'Manual Entry Required',
-            state: 'Manual Entry Required',
-            extractionNote: 'DOC/DOCX processing not fully implemented'
-        };
+        // For DOC/DOCX files - basic text extraction
+        try {
+            // You might want to use mammoth or similar library for better DOC extraction
+            const text = fs.readFileSync(filePath, 'utf8');
+            return this.extractFieldsFromText(text);
+        } catch (error) {
+            return {
+                claimantName: 'Document Processing Required',
+                district: 'Manual Entry Required',
+                village: 'Manual Entry Required',
+                state: 'Manual Entry Required',
+                extractionNote: 'DOC/DOCX processing requires manual verification'
+            };
+        }
     }
 
     extractFieldsFromText(text) {
@@ -84,6 +98,7 @@ class PDFExtractor {
         
         // Clean the text
         const cleanText = text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim();
+        console.log('Cleaned text for extraction:', cleanText.substring(0, 300)); // Debug log
 
         // Extract each field using patterns
         Object.keys(this.patterns).forEach(field => {
@@ -93,6 +108,7 @@ class PDFExtractor {
                 const match = cleanText.match(pattern);
                 if (match && match[1]) {
                     extractedData[field] = this.cleanExtractedValue(match[1], field);
+                    console.log(`Extracted ${field}:`, extractedData[field]); // Debug log
                     break;
                 }
             }
@@ -119,6 +135,7 @@ class PDFExtractor {
                 // Remove common prefixes and clean name
                 cleaned = cleaned.replace(/^(Mr|Mrs|Ms|Dr|Sri|Smt)\.?\s*/i, '');
                 cleaned = cleaned.replace(/[^a-zA-Z\s\u0900-\u097F]/g, '');
+                cleaned = cleaned.replace(/\s+/g, ' ').trim();
                 break;
                 
             case 'district':
@@ -126,6 +143,7 @@ class PDFExtractor {
             case 'state':
                 // Clean location names
                 cleaned = cleaned.replace(/[^a-zA-Z\s\u0900-\u097F]/g, '');
+                cleaned = cleaned.replace(/\s+/g, ' ').trim();
                 break;
                 
             case 'landArea':
@@ -181,12 +199,16 @@ class PDFExtractor {
         // Validate claimant name
         if (data.claimantName && typeof data.claimantName === 'string' && data.claimantName.length > 2) {
             validated.claimantName = data.claimantName.substring(0, 100);
+        } else {
+            validated.claimantName = 'Name extraction required';
         }
         
         // Validate location fields
         ['district', 'village', 'state'].forEach(field => {
             if (data[field] && typeof data[field] === 'string' && data[field].length > 1) {
                 validated[field] = data[field].substring(0, 50);
+            } else {
+                validated[field] = `${field.charAt(0).toUpperCase() + field.slice(1)} required`;
             }
         });
         
@@ -222,7 +244,8 @@ class PDFExtractor {
     calculateConfidence(data) {
         const totalFields = 6; // claimantName, district, village, state, landArea, approvalDate
         const extractedFields = Object.keys(data).filter(key => 
-            key !== 'extractionMetadata' && key !== 'coordinates'
+            key !== 'extractionMetadata' && key !== 'coordinates' && 
+            !data[key].toString().includes('required')
         ).length;
         
         return Math.round((extractedFields / totalFields) * 100);

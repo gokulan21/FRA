@@ -5,55 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NGO Dashboard - FRA Patta Management</title>
     <link rel="stylesheet" href="../../assets/css/main.css">
-    <link rel="stylesheet" href="../../assets/css/ngo.css">
+    <link rel="stylesheet" href="../../assets/css/ngo-sidebar.css">
 </head>
-<body class="ngo-dashboard">
-    <header class="ngo-header">
-        <div class="container">
-            <h1>NGO Dashboard</h1>
-            <div class="user-info">
-                <span id="ngo-name"></span>
-                <button class="btn btn-secondary" onclick="logout()">Logout</button>
+<body>
+    <div class="dashboard-layout">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h3>NGO Portal</h3>
+                <p id="ngo-organization">FRA Field Operations</p>
             </div>
-        </div>
-    </header>
-
-    <div class="container">
-        <nav class="ngo-nav">
-            <ul>
-                <li><a href="#" class="nav-link active" data-section="overview">Overview</a></li>
-                <li><a href="#" class="nav-link" data-section="assignments">My Assignments</a></li>
-                <li><a href="#" class="nav-link" data-section="reports">Submit Reports</a></li>
-                <li><a href="#" class="nav-link" data-section="policies">Policies</a></li>
-            </ul>
+            <div class="sidebar-menu">
+                <a href="#" class="menu-item active" data-section="overview">Dashboard</a>
+                <a href="#" class="menu-item" data-section="assignments">My Assignments</a>
+                <a href="#" class="menu-item" data-section="reports">Submit Reports</a>
+                <a href="#" class="menu-item" data-section="policies">Policy Documents</a>
+                <a href="#" class="menu-item" data-section="profile">Profile Settings</a>
+            </div>
         </nav>
 
-        <main class="ngo-main-content">
+        <main class="main-content">
+            <header class="content-header">
+                <h1 id="page-title">Dashboard Overview</h1>
+                <div class="user-info">
+                    <span id="ngo-name"></span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </header>
+
             <!-- Overview Section -->
-            <div id="overview-section" class="ngo-content-section">
-                <h2>Dashboard Overview</h2>
+            <div id="overview-section" class="content-section">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">Welcome to FRA Field Operations</h2>
                 
-                <div class="ngo-stats-grid">
-                    <div class="ngo-stat-card">
+                <div class="stats-grid">
+                    <div class="stat-card">
                         <h3 id="total-assignments">0</h3>
                         <p>Total Assignments</p>
                     </div>
-                    <div class="ngo-stat-card">
+                    <div class="stat-card">
                         <h3 id="active-assignments">0</h3>
                         <p>Active Assignments</p>
                     </div>
-                    <div class="ngo-stat-card">
+                    <div class="stat-card">
                         <h3 id="completed-assignments">0</h3>
                         <p>Completed</p>
                     </div>
-                    <div class="ngo-stat-card">
+                    <div class="stat-card">
                         <h3 id="overdue-assignments">0</h3>
                         <p>Overdue</p>
                     </div>
                 </div>
 
-                <div style="background: var(--light-gray); padding: 2rem; border-radius: 12px;">
-                    <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Welcome to FRA Field Operations</h3>
+                <div style="background: var(--light-gray); padding: 2rem; border-radius: 12px; margin-top: 2rem;">
+                    <h3 style="color: var(--primary-green); margin-bottom: 1rem;">Your Role in FRA Implementation</h3>
                     <p style="line-height: 1.8; margin-bottom: 1rem;">
                         As a registered NGO partner, you play a crucial role in implementing the Forest Rights Act at the grassroots level. 
                         Your field work helps ensure that tribal communities receive their rightful land titles and benefits from forest resources.
@@ -76,8 +79,8 @@
             </div>
 
             <!-- Assignments Section -->
-            <div id="assignments-section" class="ngo-content-section" style="display: none;">
-                <h2>My Assignments</h2>
+            <div id="assignments-section" class="content-section" style="display: none;">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">My Assignments</h2>
                 
                 <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
@@ -98,15 +101,11 @@
                         Loading assignments...
                     </div>
                 </div>
-
-                <div id="assignments-pagination" style="text-align: center; margin-top: 2rem;">
-                    <!-- Pagination will be inserted here -->
-                </div>
             </div>
 
             <!-- Reports Section -->
-            <div id="reports-section" class="ngo-content-section" style="display: none;">
-                <h2>Submit Field Report</h2>
+            <div id="reports-section" class="content-section" style="display: none;">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">Submit Field Report</h2>
                 
                 <div id="report-assignment-selector" style="margin-bottom: 2rem;">
                     <label for="report-assignment">Select Assignment:</label>
@@ -124,7 +123,7 @@
                                   placeholder="Provide a brief summary of your field visit and key outcomes"></textarea>
                     </div>
 
-                    <div class="form-row">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                         <div class="form-group">
                             <label for="villages-visited">Villages Visited</label>
                             <input type="text" id="villages-visited" class="form-control" 
@@ -154,23 +153,6 @@
                                   placeholder="Describe any obstacles or difficulties encountered"></textarea>
                     </div>
 
-                    <div class="form-group">
-                        <label>Supporting Documents/Photos</label>
-                        <div class="file-upload-area" onclick="document.getElementById('report-files').click()">
-                            <div style="font-size: 2rem; color: var(--primary-green); margin-bottom: 1rem;">📁</div>
-                            <p>Click to upload or drag & drop files</p>
-                            <p style="font-size: 0.9rem; color: var(--text-light);">Images, PDFs, Documents (Max 5 files, 10MB each)</p>
-                            <input type="file" id="report-files" multiple accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" style="display: none;">
-                        </div>
-                        <div id="file-list" class="file-list"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="additional-notes">Additional Notes</label>
-                        <textarea id="additional-notes" class="form-control" rows="3" 
-                                  placeholder="Any other information you'd like to share"></textarea>
-                    </div>
-
                     <button type="submit" class="btn btn-primary" style="width: 100%;">
                         <span id="submit-report-text">Submit Report</span>
                         <span id="submit-report-loading" class="loading" style="display: none;"></span>
@@ -179,8 +161,8 @@
             </div>
 
             <!-- Policies Section -->
-            <div id="policies-section" class="ngo-content-section" style="display: none;">
-                <h2>Policy Documents & Guidelines</h2>
+            <div id="policies-section" class="content-section" style="display: none;">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">Policy Documents & Guidelines</h2>
                 
                 <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
@@ -199,10 +181,49 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Profile Section -->
+            <div id="profile-section" class="content-section" style="display: none;">
+                <h2 style="color: var(--primary-green); margin-bottom: 1.5rem;">Profile Settings</h2>
+                
+                <form id="profile-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <div class="form-group">
+                                <label for="profile-name">Contact Person Name</label>
+                                <input type="text" id="profile-name" name="name" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-organization">Organization Name</label>
+                                <input type="text" id="profile-organization" name="organization" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-district">Primary District</label>
+                                <input type="text" id="profile-district" name="district" class="form-control">
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-group">
+                                <label for="profile-contact">Contact Number</label>
+                                <input type="tel" id="profile-contact" name="contactNumber" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-email">Email Address</label>
+                                <input type="email" id="profile-email" name="email" class="form-control" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="profile-area">Area of Operation</label>
+                                <textarea id="profile-area" name="areaOfOperation" class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
+                </form>
+            </div>
         </main>
     </div>
 
     <script src="../../assets/js/main.js"></script>
-    <script src="../../assets/js/ngo.js"></script>
+    <script src="../../assets/js/ngo-sidebar.js"></script>
 </body>
 </html>

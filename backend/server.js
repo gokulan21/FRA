@@ -20,10 +20,6 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static files
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.static(path.join(__dirname, '../frontend')));
-
 // Database connection
 const connectDB = async () => {
     try {
@@ -33,7 +29,7 @@ const connectDB = async () => {
         });
         console.log(`MongoDB Connected: ${conn.connection.host}`);
         
-        // Create default ministry user if not exists
+        // Create default ministry user after successful connection
         await createDefaultUsers();
     } catch (error) {
         console.error('Database connection error:', error);
@@ -61,22 +57,30 @@ const createDefaultUsers = async () => {
                 }
             });
             await newMinistryUser.save();
-            console.log('Default ministry user created: ministry@fra.gov.in / admin123');
+            console.log('✓ Default ministry user created: ministry@fra.gov.in / admin123');
+        } else {
+            console.log('✓ Ministry user already exists');
         }
     } catch (error) {
         console.error('Error creating default users:', error);
     }
 };
 
-// Connect to database
+// Connect to database first
 connectDB();
 
-// Routes
+// API Routes - These must come BEFORE static file serving
 app.use('/api/auth', authRoutes);
 app.use('/api/patta', pattaRoutes);
 app.use('/api/ngo', ngoRoutes);
 app.use('/api/assignment', assignmentRoutes);
 app.use('/api/policy', policyRoutes);
+
+// Static files - Upload directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Static files - Frontend (this should come AFTER API routes)
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Error handling middleware
 app.use((error, req, res, next) => {
@@ -87,16 +91,21 @@ app.use((error, req, res, next) => {
     });
 });
 
-// Serve frontend for all non-API routes
+// Catch-all handler: send back frontend's index.html file for non-API routes
 app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: 'API endpoint not found' });
+    }
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Frontend URL: http://localhost:${PORT}`);
-    console.log(`API URL: http://localhost:${PORT}/api`);
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📱 Frontend URL: http://localhost:${PORT}`);
+    console.log(`🔌 API URL: http://localhost:${PORT}/api`);
+    console.log(`👤 Default Login: ministry@fra.gov.in / admin123`);
 });
 
 // Handle unhandled promise rejections

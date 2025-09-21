@@ -44,6 +44,39 @@ exports.uploadPatta = async (req, res) => {
         res.status(500).json({ message: 'Error processing patta', error: error.message });
     }
 };
+exports.manualAddPatta = async (req, res) => {
+    try {
+        const { claimantName, district, village, state, landArea, coordinates } = req.body;
+        
+        const patta = new Patta({
+            claimantName: claimantName || 'Manual Entry',
+            district: district || 'Unknown',
+            village: village || 'Unknown',
+            state: state || 'Unknown',
+            landArea: landArea || null,
+            coordinates: coordinates || { latitude: null, longitude: null },
+            filePath: 'manual_entry', // Placeholder for manual entries
+            extractedData: {
+                source: 'manual_entry',
+                addedAt: new Date()
+            },
+            uploadedBy: req.user.userId,
+            isVerified: false
+        });
+
+        await patta.save();
+
+        res.status(201).json({
+            message: 'Patta added to map successfully',
+            pattaId: patta._id,
+            patta: patta
+        });
+
+    } catch (error) {
+        console.error('Manual patta addition error:', error);
+        res.status(500).json({ message: 'Error adding patta to map', error: error.message });
+    }
+};
 
 exports.uploadMultiplePattas = async (req, res) => {
     try {

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "seed": "node scripts/seedUsers.js"
+    "setup": "node scripts/createDirs.js"
   },
   "dependencies": {
     "express": "^4.18.2",

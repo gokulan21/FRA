@@ -42,4 +42,7 @@ router.put('/:id/verify', auth, authorizeMinistry, pattaController.verifyPatta);
 // Delete patta
 router.delete('/:id', auth, authorizeMinistry, pattaController.deletePatta);
 
+// Manual patta addition for map
+router.post('/manual-add', auth, authorizeMinistry, pattaController.manualAddPatta);
+
 module.exports = router;

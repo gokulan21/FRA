@@ -17,6 +17,7 @@ const auth = async (req, res, next) => {
             return res.status(401).json({ message: 'Invalid token. User not found.' });
         }
 
+        // Check if NGO user is approved (ministry users are auto-approved)
         if (user.role === 'ngo' && !user.isApproved) {
             return res.status(403).json({ message: 'Account not approved yet.' });
         }
@@ -25,7 +26,8 @@ const auth = async (req, res, next) => {
             userId: user._id,
             email: user.email,
             role: user.role,
-            profile: user.profile
+            profile: user.profile,
+            isApproved: user.isApproved
         };
 
         next();

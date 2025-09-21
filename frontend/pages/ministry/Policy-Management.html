@@ -36,18 +36,21 @@
             <!-- Upload Policy Section -->
             <div class="content-section">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                    <h3 style="color: var(--primary-green); margin: 0;">Upload New Policy</h3>
-                    <button class="btn btn-primary" onclick="toggleUploadForm()">
-                        <span id="upload-toggle-text">Add Policy</span>
+                    <h3 style="color: var(--primary-green); margin: 0;">Policy Documents</h3>
+                    <button class="btn btn-primary" onclick="showAddPolicyForm()">
+                        <span id="add-policy-text">Add New Policy</span>
                     </button>
                 </div>
 
-                <div id="policy-upload-form" style="display: none; background: var(--light-gray); padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
+                <!-- Add Policy Form (Initially Hidden) -->
+                <div id="add-policy-form" style="display: none; background: var(--light-gray); padding: 2rem; border-radius: 12px; margin-bottom: 2rem; border-left: 4px solid var(--primary-green);">
+                    <h4 style="color: var(--primary-green); margin-bottom: 1.5rem;">Add New Policy Document</h4>
                     <form id="policyForm">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                             <div class="form-group">
                                 <label for="policy-name">Policy Name *</label>
-                                <input type="text" id="policy-name" name="name" class="form-control" required>
+                                <input type="text" id="policy-name" name="name" class="form-control" required 
+                                       placeholder="e.g., FRA Implementation Guidelines 2025">
                             </div>
                             <div class="form-group">
                                 <label for="policy-category">Category *</label>
@@ -69,17 +72,21 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="policy-description">Description</label>
-                            <textarea id="policy-description" name="description" class="form-control" rows="3" placeholder="Brief description of the policy document"></textarea>
+                            <label for="policy-description">Policy Description *</label>
+                            <textarea id="policy-description" name="description" class="form-control" rows="3" required
+                                      placeholder="Provide a detailed description of this policy document, its purpose, and key provisions..."></textarea>
                         </div>
 
                         <div class="form-group">
-                            <label for="policy-file">Policy Document *</label>
+                            <label for="policy-file">Upload Policy Document *</label>
                             <div class="upload-area" onclick="document.getElementById('policy-file').click()">
                                 <div class="upload-icon">📄</div>
-                                <p>Click to upload or drag & drop</p>
-                                <p style="font-size: 0.9rem; color: var(--text-light);">PDF, DOC, DOCX (Max size: 10MB)</p>
+                                <h4>Click to upload policy document</h4>
+                                <p>Supported formats: PDF, DOC, DOCX (Max size: 10MB)</p>
                                 <input type="file" id="policy-file" name="policyFile" class="file-input" accept=".pdf,.doc,.docx" required>
+                            </div>
+                            <div id="selected-file-info" style="margin-top: 1rem; display: none;">
+                                <p style="color: var(--primary-green); font-weight: 600;">Selected file: <span id="file-name"></span></p>
                             </div>
                         </div>
 
@@ -88,16 +95,13 @@
                                 <span id="upload-policy-text">Upload Policy</span>
                                 <span id="upload-policy-loading" class="loading" style="display: none;"></span>
                             </button>
-                            <button type="button" class="btn btn-secondary" onclick="toggleUploadForm()">Cancel</button>
+                            <button type="button" class="btn btn-secondary" onclick="hideAddPolicyForm()">Cancel</button>
                         </div>
                     </form>
                 </div>
-            </div>
 
-            <!-- Policy List Section -->
-            <div class="content-section">
+                <!-- Policy Search and Filters -->
                 <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-                    <h3 style="color: var(--primary-green); margin: 0;">Policy Documents</h3>
                     <div style="display: flex; gap: 1rem; align-items: center;">
                         <select id="category-filter" class="form-control" style="width: 200px;">
                             <option value="">All Categories</option>
@@ -106,6 +110,7 @@
                     </div>
                 </div>
 
+                <!-- Policies List -->
                 <div id="policies-container">
                     <div style="text-align: center; padding: 3rem; color: var(--text-light);">
                         Loading policy documents...
@@ -180,6 +185,15 @@
             const fileInput = document.getElementById('policy-file');
             const uploadArea = document.querySelector('.upload-area');
 
+            // File input change handler
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    const file = e.target.files[0];
+                    document.getElementById('file-name').textContent = file.name;
+                    document.getElementById('selected-file-info').style.display = 'block';
+                }
+            });
+
             // Drag and drop
             uploadArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -197,10 +211,36 @@
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
                     fileInput.files = files;
+                    const file = files[0];
+                    document.getElementById('file-name').textContent = file.name;
+                    document.getElementById('selected-file-info').style.display = 'block';
                 }
             });
 
             policyForm.addEventListener('submit', handlePolicyUpload);
+        }
+
+        function showAddPolicyForm() {
+            const form = document.getElementById('add-policy-form');
+            const button = document.getElementById('add-policy-text');
+            
+            form.style.display = 'block';
+            button.textContent = 'Hide Form';
+            
+            // Scroll to form
+            form.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideAddPolicyForm() {
+            const form = document.getElementById('add-policy-form');
+            const button = document.getElementById('add-policy-text');
+            
+            form.style.display = 'none';
+            button.textContent = 'Add New Policy';
+            
+            // Reset form
+            document.getElementById('policyForm').reset();
+            document.getElementById('selected-file-info').style.display = 'none';
         }
 
         async function handlePolicyUpload(e) {
@@ -209,6 +249,17 @@
             const submitButton = e.target.querySelector('button[type="submit"]');
             const submitText = document.getElementById('upload-policy-text');
             const submitLoading = document.getElementById('upload-policy-loading');
+            
+            // Validate form
+            const name = document.getElementById('policy-name').value.trim();
+            const description = document.getElementById('policy-description').value.trim();
+            const category = document.getElementById('policy-category').value;
+            const file = document.getElementById('policy-file').files[0];
+            
+            if (!name || !description || !category || !file) {
+                fraSystem.showNotification('Please fill in all required fields and select a file', 'error');
+                return;
+            }
             
             try {
                 submitText.style.display = 'none';
@@ -226,9 +277,9 @@
                 });
                 
                 if (response.ok) {
+                    const result = await response.json();
                     fraSystem.showNotification('Policy uploaded successfully!', 'success');
-                    e.target.reset();
-                    toggleUploadForm();
+                    hideAddPolicyForm();
                     loadPolicies();
                     loadPolicyStats();
                 } else {
@@ -272,6 +323,7 @@
                     <div style="text-align: center; padding: 3rem; color: var(--text-light);">
                         <h4>No policies found</h4>
                         <p>No policy documents match the current filter criteria.</p>
+                        <button class="btn btn-primary" onclick="showAddPolicyForm()">Add First Policy</button>
                     </div>
                 `;
                 return;
@@ -283,9 +335,9 @@
                         <tr>
                             <th>Policy Name</th>
                             <th>Category</th>
+                            <th>Description</th>
                             <th>Upload Date</th>
                             <th>Downloads</th>
-                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -293,24 +345,28 @@
                         ${policies.map(policy => `
                             <tr>
                                 <td>
-                                    <div>
-                                        <strong>${policy.name}</strong>
-                                        ${policy.description ? `<br><small style="color: var(--text-light);">${policy.description}</small>` : ''}
-                                    </div>
+                                    <strong style="color: var(--primary-green);">${policy.name}</strong>
                                 </td>
-                                <td>${policy.category}</td>
-                                <td>${fraSystem.formatDate(policy.createdAt)}</td>
-                                <td>${policy.downloadCount || 0}</td>
                                 <td>
-                                    <span class="status-badge ${policy.isActive ? 'verified' : 'pending'}">
-                                        ${policy.isActive ? 'Active' : 'Inactive'}
+                                    <span style="background: var(--light-green); color: white; padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem;">
+                                        ${policy.category}
                                     </span>
                                 </td>
+                                <td style="max-width: 300px;">
+                                    <p style="margin: 0; color: var(--text-dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        ${policy.description || 'No description available'}
+                                    </p>
+                                </td>
+                                <td>${fraSystem.formatDate(policy.createdAt)}</td>
+                                <td style="text-align: center;">
+                                    <strong style="color: var(--primary-green);">${policy.downloadCount || 0}</strong>
+                                </td>
                                 <td>
-                                    <button class="btn btn-secondary btn-small" onclick="viewPolicy('${policy._id}')">View</button>
-                                    <button class="btn btn-primary btn-small" onclick="downloadPolicy('${policy._id}')">Download</button>
-                                    <button class="btn btn-warning btn-small" onclick="editPolicy('${policy._id}')">Edit</button>
-                                    <button class="btn btn-danger btn-small" onclick="deletePolicy('${policy._id}')">Delete</button>
+                                    <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+                                        <button class="btn btn-secondary btn-small" onclick="viewPolicy('${policy._id}')">View</button>
+                                        <button class="btn btn-primary btn-small" onclick="downloadPolicy('${policy._id}')">Download</button>
+                                        <button class="btn btn-danger btn-small" onclick="deletePolicy('${policy._id}')">Delete</button>
+                                    </div>
                                 </td>
                             </tr>
                         `).join('')}
@@ -324,21 +380,19 @@
                 const stats = await fraSystem.apiRequest('/policy/stats');
                 
                 document.getElementById('total-policies').textContent = stats.total || 0;
-                document.getElementById('active-policies').textContent = stats.total || 0; // Assuming all are active
+                document.getElementById('active-policies').textContent = stats.total || 0;
                 document.getElementById('policy-categories').textContent = stats.categoryStats?.length || 0;
                 
-                // Calculate this month uploads
                 const thisMonth = stats.monthlyStats?.find(m => {
                     const now = new Date();
                     return m._id.year === now.getFullYear() && m._id.month === now.getMonth() + 1;
                 });
                 document.getElementById('monthly-uploads').textContent = thisMonth?.count || 0;
                 
-                // Display popular policies
                 displayPopularPolicies(stats.popularPolicies || []);
                 
             } catch (error) {
-                fraSystem.showNotification('Error loading policy statistics: ' + error.message, 'error');
+                console.error('Error loading policy statistics:', error);
             }
         }
 
@@ -351,12 +405,17 @@
             }
             
             container.innerHTML = policies.map(policy => `
-                <div style="background: var(--light-gray); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong>${policy.name}</strong>
-                        <br><small style="color: var(--text-light);">Downloads: ${policy.downloadCount || 0}</small>
+                <div style="background: var(--light-gray); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid var(--primary-green);">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong style="color: var(--primary-green);">${policy.name}</strong>
+                            <br><small style="color: var(--text-light);">Downloads: ${policy.downloadCount || 0} | Views: ${policy.viewCount || 0}</small>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary btn-small" onclick="viewPolicy('${policy._id}')">View</button>
+                            <button class="btn btn-primary btn-small" onclick="downloadPolicy('${policy._id}')">Download</button>
+                        </div>
                     </div>
-                    <button class="btn btn-secondary btn-small" onclick="viewPolicy('${policy._id}')">View</button>
                 </div>
             `).join('');
         }
@@ -423,21 +482,6 @@
             container.innerHTML = html;
         }
 
-        // Utility functions
-        function toggleUploadForm() {
-            const form = document.getElementById('policy-upload-form');
-            const toggleText = document.getElementById('upload-toggle-text');
-            
-            if (form.style.display === 'none') {
-                form.style.display = 'block';
-                toggleText.textContent = 'Cancel';
-            } else {
-                form.style.display = 'none';
-                toggleText.textContent = 'Add Policy';
-                document.getElementById('policyForm').reset();
-            }
-        }
-
         // Action functions
         window.viewPolicy = (policyId) => {
             window.open(`/api/policy/view/${policyId}`, '_blank');
@@ -449,11 +493,6 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-        };
-
-        window.editPolicy = (policyId) => {
-            // Implement edit functionality
-            fraSystem.showNotification('Edit functionality would be implemented here', 'info');
         };
 
         window.deletePolicy = async (policyId) => {
